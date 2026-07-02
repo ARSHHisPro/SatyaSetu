@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SatyaSetu - Reports Hub Dashboard</title>
+    <title>SatyaSetu - About Project</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#6366f1">
-    <link rel="apple-touch-icon" href="https://i.ibb.co/b55QTmGR/logo.png">
+    <link class="apple-touch-icon" href="https://i.ibb.co/b55QTmGR/logo.png">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,7 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body id="page-dashboard">
+<body id="page-about">
 
     <div id="toast-container" class="toast-overlay"></div>
 
@@ -31,10 +31,10 @@
             <nav class="desktop-nav">
                 <a href="index.html" class="nav-link" data-translate="home">Home</a>
                 <a href="report.html" class="nav-link" data-translate="register">Register Complaint</a>
-                <a href="dashboard.html" class="nav-link active" data-translate="dashboard">Reports Hub</a>
+                <a href="dashboard.html" class="nav-link" data-translate="dashboard">Reports Hub</a>
                 <a href="analytics.html" class="nav-link">Analytics</a>
                 <a href="complaints.html" class="nav-link">All Complaints</a>
-                <a href="about.html" class="nav-link">About</a>
+                <a href="about.html" class="nav-link active">About</a>
                 <a href="privacy.html" class="nav-link" data-translate="safety">Privacy & Safety</a>
                 <a href="settings.html" class="nav-link"><i data-lucide="settings" style="width:16px; height:16px;"></i></a>
             </nav>
@@ -56,89 +56,61 @@
         <div id="mobile-nav-dropdown" class="glass-panel mobile-dropdown">
             <a href="index.html" class="nav-link" data-translate="home">Home</a>
             <a href="report.html" class="nav-link" data-translate="register">Register Complaint</a>
-            <a href="dashboard.html" class="nav-link active" data-translate="dashboard">Reports Hub</a>
+            <a href="dashboard.html" class="nav-link" data-translate="dashboard">Reports Hub</a>
             <a href="analytics.html" class="nav-link">Analytics</a>
             <a href="complaints.html" class="nav-link">All Complaints</a>
-            <a href="about.html" class="nav-link">About</a>
+            <a href="about.html" class="nav-link active">About</a>
             <a href="privacy.html" class="nav-link" data-translate="safety">Privacy & Safety</a>
             <a href="settings.html" class="nav-link">Settings</a>
         </div>
     </header>
 
     <main class="max-width-container">
-        <section class="fade-in-el">
+        <section class="fade-in-el" style="max-width:850px; margin:0 auto;">
             
-            <div class="hero" style="margin-bottom:32px;">
-                <h2>SDG-16 Dashboard Control Room</h2>
-                <p style="font-size:15px; margin-top:4px;">Unified community reports audit list and key statistics preview</p>
-                <span id="connection-badge" class="badge badge-warning" style="margin:8px auto 0 auto;">Checking Connection...</span>
-            </div>
+            <div class="glass-panel text-left" style="padding:48px; border-radius:var(--radius-lg);">
+                <h2 style="font-size:36px; font-weight:900; margin-bottom:8px; display:flex; align-items:center; gap:12px;">
+                    🏛️ Project SatyaSetu
+                </h2>
+                <p style="font-size:11px; text-transform:uppercase; font-weight:900; color:var(--primary); letter-spacing:1.5px; margin-bottom:32px;">SDG Goal 16 Educational Portal Initiative</p>
 
-            <!-- Stats Bar Row -->
-            <div class="stats-bar">
-                <div class="glass-card stat-item">
+                <div style="display:flex; flex-direction:column; gap:28px; font-size:14px; line-height:1.7; color:var(--text-muted);">
+                    
                     <div>
-                        <span class="stat-label" data-translate="total_logs">Total Logs</span>
-                        <span id="stat-total" class="stat-val">0</span>
+                        <h3 style="color:var(--text-main); font-size:16px; font-weight:800; margin-bottom:8px;">Goal & Purpose</h3>
+                        <p>SatyaSetu is designed as an educational, offline-compatible simulation portal modeling civic integrity reporting pathways. By documenting infrastructure, resource allocation, and civic transparency metrics, we raise awareness of Sustainable Development Goal 16 (Peace, Justice, and Strong Institutions).</p>
                     </div>
-                    <span class="stat-icon" style="color:var(--primary);">📁</span>
-                </div>
-                <div class="glass-card stat-item">
-                    <div>
-                        <span class="stat-label" data-translate="severe_flags">High & Critical Flags</span>
-                        <span id="stat-severe" class="stat-val">0</span>
-                    </div>
-                    <span class="stat-icon" style="color:var(--accent-red);">⚠️</span>
-                </div>
-                <div class="glass-card stat-item">
-                    <div>
-                        <span class="stat-label">AI Spam Filtered</span>
-                        <span id="stat-spam" class="stat-val">0</span>
-                    </div>
-                    <span class="stat-icon" style="color:var(--accent-yellow);">🛡️</span>
-                </div>
-                <div class="glass-card stat-item">
-                    <div>
-                        <span class="stat-label">AI Trust Accuracy</span>
-                        <span id="stat-confidence" class="stat-val">0%</span>
-                    </div>
-                    <span class="stat-icon" style="color:var(--accent-green);">🤖</span>
-                </div>
-            </div>
 
-            <!-- AI Automated Summaries Box -->
-            <div class="glass-panel alert" style="background:rgba(99,102,241,0.06); border:1px solid rgba(99,102,241,0.15); border-left:4px solid var(--neon-indigo); padding:24px; border-radius:var(--radius-md); margin-bottom:40px;">
-                <h4 style="font-size:15px; font-weight:800; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
-                    🤖 Automated AI Summary Analytics
-                </h4>
-                <p id="ai-insight-text" style="font-size:13px; line-height:1.6; color:var(--text-muted);">Running structural diagnostics scan on complaints database...</p>
-            </div>
+                    <div>
+                        <h3 style="color:var(--text-main); font-size:16px; font-weight:800; margin-bottom:8px;">Core Features & Integrations</h3>
+                        <ul style="list-style-type:square; padding-left:20px; font-size:13px; display:flex; flex-direction:column; gap:8px;">
+                            <li><strong>Offline Compatibility:</strong> Fully operates without internet backups using Service Worker caches and LocalStorage fallbacks.</li>
+                            <li><strong>On-Device NLP Analysis:</strong> Automatically flags keyboard spammers, profanities, and duplicate entries entirely client-side.</li>
+                            <li><strong>Interactive Chart Dashboards:</strong> Uses Chart.js to map severity thresholds, classifications, and daily trends.</li>
+                            <li><strong>PII Audit Shield:</strong> Local regular expressions shield user reports from leakage of sensitive credential tokens.</li>
+                        </ul>
+                    </div>
 
-            <!-- Recent 3 Complaints Grid -->
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h3 style="font-weight:900; font-size:20px;">Recent Case Reports</h3>
-                <a href="complaints.html" class="btn btn-secondary" style="padding:8px 16px; font-size:12px;">View All Directory</a>
+                    <div>
+                        <h3 style="color:var(--text-main); font-size:16px; font-weight:800; margin-bottom:8px;">Technology Stack</h3>
+                        <p>Built with vanilla standard HTML5, CSS3 styling variables, vanilla JavaScript global scopes, Firebase compatibility libraries, Chart.js, Lucide Icons, and ElevenLabs conversational voice assistants.</p>
+                    </div>
+
+                    <div style="background:rgba(99, 102, 241, 0.04); border:1px solid var(--glass-border); padding:24px; border-radius:var(--radius-md);">
+                        <h3 style="color:var(--text-main); font-size:16px; font-weight:800; margin-bottom:12px;">Development Team Credits</h3>
+                        <p style="font-size:13px; margin-bottom:8px;">This project has been compiled and designed by:</p>
+                        <ul style="list-style-type:circle; padding-left:20px; font-size:12px; display:flex; flex-direction:column; gap:6px;">
+                            <li><strong>Arshit</strong> — Lead Engineer & Firebase Integrations</li>
+                            <li><strong>Arjun</strong> — Frontend Designer & Styles Coordinator</li>
+                            <li><strong>Madhavi</strong> — AI Engine & Quality Auditor</li>
+                            <li><strong>Prabhnoor</strong> — Offline Systems & PWA Specialist</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
             
-            <div id="submissions-list" class="submissions-grid">
-                <!-- Skeletons will load here -->
-                <div class="col-span-full" style="grid-column: 1 / -1; display:flex; justify-content:center; padding:50px;">
-                    <div class="skeleton" style="width:50px; height:50px; border-radius:50%;"></div>
-                </div>
-            </div>
-
-            <!-- Call-to-actions row -->
-            <div style="display:flex; gap:20px; margin-top:40px; justify-content:center;">
-                <a href="report.html" class="btn btn-primary">File New Concern</a>
-                <a href="analytics.html" class="btn btn-secondary">Analyze Interactive Graphs</a>
-            </div>
-
         </section>
     </main>
-
-    <a href="report.html" class="fab" title="Log New Community Concern" aria-label="Log new concern">
-        <i data-lucide="plus"></i>
-    </a>
 
     <footer>
         <div class="max-width-container">

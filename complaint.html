@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SatyaSetu - Privacy Safety Charter</title>
+    <title>SatyaSetu - Complaint Details</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#6366f1">
@@ -17,7 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body id="page-privacy">
+<body id="page-complaint">
 
     <div id="toast-container" class="toast-overlay"></div>
 
@@ -35,7 +35,7 @@
                 <a href="analytics.html" class="nav-link">Analytics</a>
                 <a href="complaints.html" class="nav-link">All Complaints</a>
                 <a href="about.html" class="nav-link">About</a>
-                <a href="privacy.html" class="nav-link active" data-translate="safety">Privacy & Safety</a>
+                <a href="privacy.html" class="nav-link" data-translate="safety">Privacy & Safety</a>
                 <a href="settings.html" class="nav-link"><i data-lucide="settings" style="width:16px; height:16px;"></i></a>
             </nav>
 
@@ -60,7 +60,7 @@
             <a href="analytics.html" class="nav-link">Analytics</a>
             <a href="complaints.html" class="nav-link">All Complaints</a>
             <a href="about.html" class="nav-link">About</a>
-            <a href="privacy.html" class="nav-link active" data-translate="safety">Privacy & Safety</a>
+            <a href="privacy.html" class="nav-link" data-translate="safety">Privacy & Safety</a>
             <a href="settings.html" class="nav-link">Settings</a>
         </div>
     </header>
@@ -68,45 +68,76 @@
     <main class="max-width-container">
         <section class="fade-in-el" style="max-width:850px; margin:0 auto;">
             
-            <div class="glass-panel text-left" style="padding:48px; border-radius:var(--radius-lg);">
-                <h2 style="font-size:36px; font-weight:900; margin-bottom:8px;">Safety Charter</h2>
-                <p style="font-size:11px; text-transform:uppercase; font-weight:900; color:var(--primary); letter-spacing:1.5px; margin-bottom:32px;">Scam Prevention & Privacy Protection Guidelines</p>
+            <div style="margin-bottom:20px;">
+                <a href="complaints.html" class="btn btn-secondary" style="width:fit-content; padding:8px 16px; font-size:12px;">
+                    ← Back to Complaints Directory
+                </a>
+            </div>
 
-                <div style="display:flex; flex-direction:column; gap:28px; font-size:14px; line-height:1.7; color:var(--text-muted);">
+            <div id="complaint-detail-card" class="glass-panel" style="padding:48px; border-radius:var(--radius-lg);">
+                
+                <div class="modal-header">
+                    <h2 id="detail-title" style="font-size:28px; font-weight:900; margin-bottom:12px;">Complaint Title</h2>
                     
-                    <div style="border-left:4px solid var(--neon-rose); padding-left:16px; background:var(--accent-red-light); padding:20px; border-radius: 0 var(--radius-md) var(--radius-md) 0;">
-                        <h3 style="color:var(--text-main); font-size:16px; font-weight:800; margin-bottom:6px;">🛡️ 1. Zero Credential Harvesting & Phishing Policy</h3>
-                        <p style="font-size:13px;">SatyaSetu operates under a strict anti-phishing regime. We explicitly prohibit the collection of passwords, account numbers, government identifiers, or biometric profiles. This form will never ask for any of those things.</p>
-                    </div>
-
-                    <div>
-                        <h3 style="color:var(--text-main); font-size:16px; font-weight:800; margin-bottom:6px;">💾 2. Where Your Report Goes</h3>
-                        <p style="font-size:13px;">When this app is connected to its project database (Cloud Firestore), your submission is saved securely so the whole team/class can review the shared dashboard. If that connection is unavailable, the report is saved only on your device as a fallback.</p>
-                    </div>
-
-                    <div>
-                        <h3 style="color:var(--text-main); font-size:16px; font-weight:800; margin-bottom:6px;">🔍 3. Shared Database, No Personal Data</h3>
-                        <p style="font-size:13px;">The shared database only ever receives the fields shown on the submission form: date, title, description, classification, severity, and optional media. Access is governed by standard firestore protection rules.</p>
-                    </div>
-
-                    <div style="background:rgba(99, 102, 241, 0.04); border:1px solid var(--glass-border); padding:24px; border-radius:var(--radius-md);">
-                        <h4 style="color:var(--text-main); font-size:15px; font-weight:800; margin-bottom:12px;">Frequently Asked Questions (FAQ):</h4>
-                        <div style="display:flex; flex-direction:column; gap:16px; font-size:13px;">
-                            <div>
-                                <strong style="color:var(--text-main); display:block; margin-bottom:4px;">Q: How do you check for personal info?</strong>
-                                <span>We scan reports locally for patterns resembling credit cards, emails, phone lines, and government IDs like Aadhaar or PAN. Reports fail verification if PII is detected.</span>
-                            </div>
-                            <div>
-                                <strong style="color:var(--text-main); display:block; margin-bottom:4px;">Q: Are images compressed?</strong>
-                                <span>Yes, proof images are resized using client-side canvas to 1000px before uploading, ensuring size efficiency.</span>
-                            </div>
-                        </div>
+                    <div class="modal-meta-row">
+                        <span id="detail-date" class="badge badge-mono">Date</span>
+                        <span id="detail-severity" class="badge">Severity</span>
+                        <span id="detail-classification" class="badge badge-info">Classification</span>
                     </div>
                 </div>
 
-                <div style="display:flex; gap:20px; margin-top:40px;">
-                    <a href="report.html" class="btn btn-primary" style="flex-grow:1;">Proceed to Registration</a>
-                    <a href="index.html" class="btn btn-secondary">Return Home</a>
+                <div class="modal-divider"></div>
+
+                <div style="font-size:13px; color:var(--text-muted); display:flex; flex-direction:column; gap:6px; margin-bottom:24px;">
+                    <span id="detail-location">📍 Location: Area, City, State</span>
+                    <span id="detail-dept">🏛️ Department: Department Name</span>
+                </div>
+
+                <!-- Body incident details -->
+                <p id="detail-text" class="modal-body" style="font-size:15px; margin-bottom:32px;">Detailed description of the public issue logged...</p>
+
+                <!-- Media attachments -->
+                <div class="modal-attachments">
+                    <img id="detail-image" class="modal-media" style="display:none;" alt="Proof validation image">
+                    <video id="detail-video" class="modal-media" style="display:none;" controls></video>
+                </div>
+
+                <!-- QR code and AI metrics -->
+                <div style="display:grid; grid-template-columns: 1fr; gap:28px; margin-bottom:32px;">
+                    <div id="detail-ai-metrics"></div>
+                    <div id="detail-qr-container" style="text-align:center;"></div>
+                </div>
+
+                <!-- Timeline checkpoints -->
+                <div class="timeline-section" style="margin-bottom:40px;">
+                    <h4 class="timeline-title">Audit Action Trail</h4>
+                    <div id="detail-timeline"></div>
+                </div>
+
+                <div class="modal-divider"></div>
+
+                <!-- Actions buttons -->
+                <div style="display:flex; flex-wrap:wrap; gap:16px; margin-top:20px;">
+                    <button id="detail-delete-btn" class="btn btn-secondary" style="flex-grow:1; background:var(--accent-red-light); color:var(--accent-red); border-color:rgba(244,63,94,0.25); display:none;">
+                        <i data-lucide="trash-2" style="width:14px; height:14px; display:inline-block; vertical-align:middle; margin-right:4px;"></i>
+                        Delete local record
+                    </button>
+                    <button id="detail-print-btn" class="btn btn-secondary" style="flex-grow:1;">
+                        <i data-lucide="printer" style="width:14px; height:14px; display:inline-block; vertical-align:middle; margin-right:4px;"></i>
+                        Print/Export PDF
+                    </button>
+                    <button id="detail-copy-link-btn" class="btn btn-secondary" style="flex-grow:1;">
+                        <i data-lucide="link" style="width:14px; height:14px; display:inline-block; vertical-align:middle; margin-right:4px;"></i>
+                        Copy Tracking Link
+                    </button>
+                </div>
+            </div>
+
+            <!-- Related Complaints Section -->
+            <div style="margin-top:56px;">
+                <h3 style="font-weight:900; font-size:18px; margin-bottom:20px;">Related Complaints</h3>
+                <div id="related-complaints-list" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:24px;">
+                    <p style="font-size:12px; color:var(--text-muted);">Loading related cases...</p>
                 </div>
             </div>
             
@@ -136,6 +167,11 @@
     <script src="app.js"></script>
 
     <script>
+        // Trigger page refresh on hash change (normal HTML linking for detail tracking)
+        window.addEventListener('hashchange', () => {
+            window.location.reload();
+        });
+
         window.addEventListener('load', () => {
             if (window.lucide) {
                 lucide.createIcons();

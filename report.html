@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SatyaSetu - Register Community Complaint</title>
+    <title>SatyaSetu - Register Complaint</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#6366f1">
-    <link rel="apple-touch-icon" href="https://i.ibb.co/b55QTmGR/logo.png">
+    <link class="apple-touch-icon" href="https://i.ibb.co/b55QTmGR/logo.png">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,9 +30,13 @@
 
             <nav class="desktop-nav">
                 <a href="index.html" class="nav-link" data-translate="home">Home</a>
-                <a href="register.html" class="nav-link active" data-translate="register">Register Complaint</a>
+                <a href="report.html" class="nav-link active" data-translate="register">Register Complaint</a>
                 <a href="dashboard.html" class="nav-link" data-translate="dashboard">Reports Hub</a>
+                <a href="analytics.html" class="nav-link">Analytics</a>
+                <a href="complaints.html" class="nav-link">All Complaints</a>
+                <a href="about.html" class="nav-link">About</a>
                 <a href="privacy.html" class="nav-link" data-translate="safety">Privacy & Safety</a>
+                <a href="settings.html" class="nav-link"><i data-lucide="settings" style="width:16px; height:16px;"></i></a>
             </nav>
 
             <div class="header-actions">
@@ -51,9 +55,13 @@
         
         <div id="mobile-nav-dropdown" class="glass-panel mobile-dropdown">
             <a href="index.html" class="nav-link" data-translate="home">Home</a>
-            <a href="register.html" class="nav-link active" data-translate="register">Register Complaint</a>
+            <a href="report.html" class="nav-link active" data-translate="register">Register Complaint</a>
             <a href="dashboard.html" class="nav-link" data-translate="dashboard">Reports Hub</a>
+            <a href="analytics.html" class="nav-link">Analytics</a>
+            <a href="complaints.html" class="nav-link">All Complaints</a>
+            <a href="about.html" class="nav-link">About</a>
             <a href="privacy.html" class="nav-link" data-translate="safety">Privacy & Safety</a>
+            <a href="settings.html" class="nav-link">Settings</a>
         </div>
     </header>
 
@@ -61,7 +69,6 @@
         <section class="fade-in-el">
             
             <div class="glass-panel form-panel">
-                <!-- Glowing line style indicator matching target -->
                 <div class="form-header">
                     <h2 data-translate="form_title">Log Community Concern</h2>
                     <p data-translate="form_subtitle">All fields marked with an asterisk (*) are required.</p>
@@ -84,7 +91,6 @@
 
                 <form id="complaint-form" novalidate>
                     
-                    <!-- Honeypot anti-bot protection input (completely hidden from humans) -->
                     <div style="display:none; opacity:0; width:0; height:0; overflow:hidden;" aria-hidden="true">
                         <label for="website_url">Website Link</label>
                         <input type="text" id="website_url" name="website_url" tabindex="-1" value="">
@@ -101,7 +107,7 @@
                     <div class="form-group">
                         <label for="complaint-title" data-translate="field_title">Complaint Title *</label>
                         <span class="help-text">Sum up the public issue. Do not include personal names.</span>
-                        <input type="text" id="complaint-title" maxlength="120" placeholder="e.g. Irrigation channel concrete lining left incomplete" class="input-control" required>
+                        <input type="text" id="complaint-title" maxlength="120" placeholder="e.g. Broken water delivery channel lining" class="input-control" required>
                         <span id="title-counter" class="char-counter">0 / 120</span>
                     </div>
 
@@ -109,7 +115,7 @@
                     <div class="form-group" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px;">
                         <div>
                             <label for="city-input">City *</label>
-                            <input type="text" id="city-input" placeholder="e.g. Bhatinda" class="input-control" required>
+                            <input type="text" id="city-input" placeholder="e.g. Jaipur" class="input-control" required>
                         </div>
                         <div>
                             <label for="state-input">State *</label>
@@ -128,11 +134,11 @@
                         </div>
                         <div>
                             <label for="area-input">Area / Street Location *</label>
-                            <input type="text" id="area-input" placeholder="e.g. Sector 4 Canal" class="input-control" required>
+                            <input type="text" id="area-input" placeholder="e.g. Sector 4 Canal Bridge" class="input-control" required>
                         </div>
                     </div>
 
-                    <!-- AI Suggested inputs overrides (optional) -->
+                    <!-- Department/Category selects -->
                     <div class="form-group" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
                         <div>
                             <label for="dept-select">Department (AI will auto-suggest if blank)</label>
@@ -165,7 +171,7 @@
                     <div class="form-group">
                         <label for="complaint-details" data-translate="field_details">Incident Details *</label>
                         <span class="help-text">Describe what was witnessed, observed, or investigated. Keep anonymous.</span>
-                        <textarea id="complaint-details" maxlength="1000" placeholder="e.g. The concrete lining of the water channel halted repairs three months ago, leaving mud lining accumulation..." class="input-control" required></textarea>
+                        <textarea id="complaint-details" maxlength="1000" placeholder="e.g. The contractor abandoned concrete linining repairs of the water channel 3 months ago..." class="input-control" required></textarea>
                         <span id="details-counter" class="char-counter">0 / 1000</span>
                     </div>
 
@@ -227,7 +233,7 @@
                         <!-- Math challenge overlay -->
                         <div class="math-challenge" id="math-challenge-section">
                             <span class="math-question" id="math-label">7 + 2 = ?</span>
-                            <input type="number" id="math-input" placeholder="Answer" class="input-control math-input">
+                            <input type="number" id="math-input" placeholder="Your Answer" class="input-control math-input">
                         </div>
                     </div>
 
@@ -241,7 +247,7 @@
 
                     <!-- Action buttons -->
                     <div class="form-actions">
-                        <button id="submit-btn" type="submit" class="btn btn-primary" style="background:var(--accent-red); box-shadow: 0 4px 14px rgba(248, 113, 113, 0.35);" data-translate="btn_submit">Submit Incident</button>
+                        <button id="submit-btn" type="submit" class="btn btn-primary" style="background:var(--accent-red); box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);" data-translate="btn_submit">Submit Incident</button>
                         <button id="cancel-btn" type="button" class="btn btn-secondary" data-translate="btn_cancel">Cancel</button>
                     </div>
 

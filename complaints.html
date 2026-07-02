@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SatyaSetu - View Complaints</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    <link class="apple-touch-icon" href="https://i.ibb.co/b55QTmGR/logo.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <link rel="stylesheet" href="styles.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body id="page-complaints">
+
+    <div id="toast-container" class="toast-overlay"></div>
+
+    <header>
+        <div class="max-width-container header-content">
+            <a href="index.html" class="brand">
+                <span data-translate="brand">SatyaSetu</span>
+                <span class="sdg-badge">SDG 16</span>
+            </a>
+
+            <nav class="desktop-nav">
+                <a href="index.html" class="nav-link" data-translate="home">Home</a>
+                <a href="report.html" class="nav-link" data-translate="register">Register Complaint</a>
+                <a href="dashboard.html" class="nav-link" data-translate="dashboard">Reports Hub</a>
+                <a href="analytics.html" class="nav-link">Analytics</a>
+                <a href="complaints.html" class="nav-link active">All Complaints</a>
+                <a href="about.html" class="nav-link">About</a>
+                <a href="privacy.html" class="nav-link" data-translate="safety">Privacy & Safety</a>
+                <a href="settings.html" class="nav-link"><i data-lucide="settings" style="width:16px; height:16px;"></i></a>
+            </nav>
+
+            <div class="header-actions">
+                <button class="action-btn" id="lang-toggle-btn" title="Toggle Language">हिन्दी</button>
+                <button class="action-btn" id="theme-toggle-btn" title="Toggle Theme" aria-label="Toggle theme">
+                    <i data-lucide="sun"></i>
+                </button>
+                <button class="action-btn" id="reset-demo-btn" title="Reset Sandbox Backups" data-translate="reset_demo" style="width:auto; padding:0 12px; font-size:11px; font-weight:700;">
+                    Reset Demo
+                </button>
+                <button class="action-btn mobile-nav-toggle" id="mobile-menu-btn" onclick="document.getElementById('mobile-nav-dropdown').classList.toggle('active')" aria-label="Toggle mobile menu">
+                    <i data-lucide="menu"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div id="mobile-nav-dropdown" class="glass-panel mobile-dropdown">
+            <a href="index.html" class="nav-link" data-translate="home">Home</a>
+            <a href="report.html" class="nav-link" data-translate="register">Register Complaint</a>
+            <a href="dashboard.html" class="nav-link" data-translate="dashboard">Reports Hub</a>
+            <a href="analytics.html" class="nav-link">Analytics</a>
+            <a href="complaints.html" class="nav-link active">All Complaints</a>
+            <a href="about.html" class="nav-link">About</a>
+            <a href="privacy.html" class="nav-link" data-translate="safety">Privacy & Safety</a>
+            <a href="settings.html" class="nav-link">Settings</a>
+        </div>
+    </header>
+
+    <main class="max-width-container">
+        <section class="fade-in-el">
+            
+            <div class="hero" style="margin-bottom:32px;">
+                <h2>All Community Case Reports</h2>
+                <p style="font-size:14px; margin-top:4px;">Browse and search verified integrity records and infrastructure issues.</p>
+                <span id="connection-badge" class="badge badge-warning" style="margin:8px auto 0 auto;">Checking Connection...</span>
+            </div>
+
+            <!-- Search, Filters and Sorting toolbar -->
+            <div class="glass-panel search-filter-panel">
+                <div class="search-wrapper">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input type="text" id="search-input" placeholder="Search through titles, IDs or locations..." class="input-control search-input" data-translate="search_placeholder">
+                </div>
+
+                <select id="dept-filter" class="filter-select">
+                    <option value="all">All Departments</option>
+                    <option value="Police & Law Enforcement">Police & Law Enforcement</option>
+                    <option value="Judiciary & Courts">Judiciary & Courts</option>
+                    <option value="Municipal & Public Works">Municipal & Public Works</option>
+                    <option value="Finance & Revenue">Finance & Revenue</option>
+                    <option value="Education & Health Services">Education & Health Services</option>
+                    <option value="Agriculture & Water Resources">Agriculture & Water Resources</option>
+                    <option value="General Administration">General Administration</option>
+                </select>
+
+                <select id="cat-filter" class="filter-select">
+                    <option value="all">All Categories</option>
+                    <option value="Bribery & Graft">Bribery & Graft</option>
+                    <option value="Judicial Abuse of Power">Judicial Abuse of Power</option>
+                    <option value="Embezzlement & Misappropriation">Embezzlement & Misappropriation</option>
+                    <option value="Administrative Negligence">Administrative Negligence</option>
+                    <option value="Human Rights Violations">Human Rights Violations</option>
+                    <option value="General Public Concern">General Public Concern</option>
+                </select>
+
+                <select id="severity-filter" class="filter-select">
+                    <option value="all">All Severities</option>
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                    <option value="Critical">Critical</option>
+                </select>
+
+                <select id="status-filter" class="filter-select">
+                    <option value="all">All Statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Under Review">Under Review</option>
+                    <option value="Resolved">Resolved</option>
+                    <option value="Flagged">Flagged / Review</option>
+                </select>
+
+                <select id="sort-order" class="filter-select">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="severity">Highest Severity</option>
+                </select>
+
+                <button class="btn btn-secondary" id="sync-list-btn" title="Force Synchronize database sync" style="padding:10px 16px;">
+                    <i data-lucide="refresh-cw" style="width:14px; height:14px;"></i>
+                    <span data-translate="sync_list">Sync List ⟳</span>
+                </button>
+                <button class="btn btn-secondary" id="clear-filters-btn" title="Clear filters" style="padding:10px 16px;">
+                    <i data-lucide="x-circle" style="width:14px; height:14px;"></i>
+                    Clear
+                </button>
+            </div>
+
+            <!-- Export toolbar row -->
+            <div style="display:flex; justify-content:flex-end; gap:12px; margin-bottom:24px;">
+                <button class="btn btn-secondary" onclick="window.UTILS.exportToCSV(window.App.complaints, 'complaints_directory.csv')" style="padding:8px 16px; font-size:12px;">
+                    <i data-lucide="download" style="width:14px; height:14px;"></i>
+                    Export CSV
+                </button>
+                <button class="btn btn-secondary" onclick="window.print()" style="padding:8px 16px; font-size:12px;">
+                    <i data-lucide="printer" style="width:14px; height:14px;"></i>
+                    Print Directory
+                </button>
+            </div>
+
+            <!-- Directory complaint cards rendering -->
+            <div id="submissions-list" class="submissions-grid">
+                <!-- Skeletons load initially -->
+                <div class="col-span-full" style="grid-column: 1 / -1; display:flex; justify-content:center; padding:50px;">
+                    <div class="skeleton" style="width:50px; height:50px; border-radius:50%;"></div>
+                </div>
+            </div>
+
+            <!-- Paging UI controls -->
+            <div id="pagination-controls" class="pagination"></div>
+
+        </section>
+    </main>
+
+    <a href="report.html" class="fab" title="Log New Community Concern" aria-label="Log new concern">
+        <i data-lucide="plus"></i>
+    </a>
+
+    <footer>
+        <div class="max-width-container">
+            <p style="margin-bottom:4px;">SatyaSetu Civic Transparency Network — Made in alignment with SDG Goal 16.</p>
+            <p style="font-size:11px; color:var(--text-muted);">Development team: Arshit, Arjun, Madhavi and Prabhnoor</p>
+        </div>
+    </footer>
+
+    <!-- Firebase Compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <!-- Custom Scripts -->
+    <script src="config.js"></script>
+    <script src="utils.js"></script>
+    <script src="validation.js"></script>
+    <script src="ai.js"></script>
+    <script src="firebase.js"></script>
+    <script src="charts.js"></script>
+    <script src="ui.js"></script>
+    <script src="app.js"></script>
+
+    <script>
+        window.addEventListener('load', () => {
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        });
+    </script>
+</body>
+</html>

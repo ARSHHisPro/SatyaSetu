@@ -1,0 +1,123 @@
+// Satyasetu - Firebase Integration with Offline Persistence Cache (Global compat script version)
+
+let db = null;
+let auth = null;
+let isInitialized = false;
+
+window.FIREBASE = {
+    async init(onAuthChangeCallback) {
+        if (isInitialized) return { success: true, db, auth };
+
+        try {
+            if (typeof firebase === 'undefined') {
+                throw new Error("Firebase SDK libraries not loaded.");
+            }
+
+            const app = firebase.initializeApp(window.CONFIG.FIREBASE_CONFIG);
+            db = firebase.firestore(app);
+
+            try {
+                await db.enablePersistence({ synchronizeTabs: true });
+                console.log("Firestore offline persistence activated successfully.");
+            } catch (err) {
+                if (err.code == 'failed-precondition') {
+                    console.warn("Multiple tabs open, persistence enabled in first tab only.");
+                } else if (err.code == 'unimplemented') {
+                    console.warn("The current browser does not support offline persistence.");
+                }
+            }
+
+            auth = firebase.auth(app);
+
+            if (onAuthChangeCallback) {
+                auth.onAuthStateChanged((user) => {
+                    onAuthChangeCallback(user);
+                });
+            }
+
+            await auth.signInAnonymously();
+            
+            isInitialized = true;
+            console.log("Firebase compatibility stack initialized successfully.");
+            return { success: true, db, auth };
+            
+        } catch (err) {
+            console.error("Firebase Initialization Failure:", err);
+            isInitialized = false;
+            return { success: false, error: err };
+        }
+    },
+
+    async submitComplaint(payload) {
+        if (!db) throw new Error("Database service is offline.");
+
+        try {
+            const complaintsCollection = db.collection('artifacts').doc(window.CONFIG.APP_ID).collection('public').doc('data').collection('complaints');
+            const docId = payload.id || complaintsCollection.doc().id;
+            await complaintsCollection.doc(docId).set({
+                ...payload,
+                id: docId,
+                updated_at: new Date().toISOString()
+            }, { merge: true });
+            return { success: true, id: docId };
+        } catch (err) {
+            console.error("Firestore Write Error:", err);
+            throw err;
+        }
+    },
+
+    subscribeToComplaints(onUpdateCallback, onErrorCallback) {
+        if (!db) {
+            if (onErrorCallback) onErrorCallback(new Error("Database offline"));
+            return null;
+        }
+
+        try {
+            const complaintsCollection = db.collection('artifacts').doc(window.CONFIG.APP_ID).collection('public').doc('data').collection('complaints');
+            
+            return complaintsCollection.onSnapshot((snapshot) => {
+                const list = [];
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data() || {};
+                    list.push({
+                        ...data,
+                        id: data.id || docSnap.id,
+                        _firestore_id: docSnap.id
+                    });
+                });
+                
+                list.sort((a, b) => {
+                    const timeA = new Date(a.created_at || 0).getTime();
+                    const timeB = new Date(b.created_at || 0).getTime();
+                    return timeB - timeA;
+                });
+
+                onUpdateCallback(list);
+            }, (error) => {
+                console.error("Firestore Subscription Error:", error);
+                if (onErrorCallback) onErrorCallback(error);
+            });
+        } catch (err) {
+            console.error("Firestore setup sync error:", err);
+            if (onErrorCallback) onErrorCallback(err);
+            return null;
+        }
+    },
+
+    async deleteComplaint(docId) {
+        if (!db) throw new Error("Database service is offline.");
+
+        try {
+            const docRef = db.collection('artifacts').doc(window.CONFIG.APP_ID).collection('public').doc('data').collection('complaints').doc(docId);
+            await docRef.delete();
+            return { success: true };
+        } catch (err) {
+            console.error("Firestore Delete Error:", err);
+            throw err;
+        }
+    },
+
+    isReady() {
+        return isInitialized && db !== null && auth !== null && auth.currentUser !== null;
+    }
+};
