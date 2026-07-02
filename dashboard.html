@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SatyaSetu - SDG-16 Reports Hub</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/b55QTmGR/logo.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/animations.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+    <div id="toast-container" class="toast-overlay"></div>
+
+    <header>
+        <div class="max-width-container header-content">
+            <a href="index.html" class="brand">
+                <span data-translate="brand">SatyaSetu</span>
+                <span class="sdg-badge">SDG 16</span>
+            </a>
+
+            <nav class="desktop-nav">
+                <a href="index.html" class="nav-link" data-translate="home">Home</a>
+                <a href="register.html" class="nav-link" data-translate="register">Register Complaint</a>
+                <a href="dashboard.html" class="nav-link active" data-translate="dashboard">Reports Hub</a>
+                <a href="privacy.html" class="nav-link" data-translate="safety">Privacy & Safety</a>
+            </nav>
+
+            <div class="header-actions">
+                <button class="action-btn" id="lang-toggle-btn" title="Toggle Language">हिन्दी</button>
+                <button class="action-btn" id="theme-toggle-btn" title="Toggle Theme" aria-label="Toggle theme">
+                    <i data-lucide="sun"></i>
+                </button>
+                <button class="action-btn" id="reset-demo-btn" title="Reset Sandbox Backups" data-translate="reset_demo" style="width:auto; padding:0 12px; font-size:11px; font-weight:700;">
+                    Reset Demo
+                </button>
+                <button class="action-btn mobile-nav-toggle" id="mobile-menu-btn" onclick="document.getElementById('mobile-nav-dropdown').classList.toggle('active')" aria-label="Toggle mobile menu">
+                    <i data-lucide="menu"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div id="mobile-nav-dropdown" class="glass-panel mobile-dropdown">
+            <a href="index.html" class="nav-link" data-translate="home">Home</a>
+            <a href="register.html" class="nav-link" data-translate="register">Register Complaint</a>
+            <a href="dashboard.html" class="nav-link active" data-translate="dashboard">Reports Hub</a>
+            <a href="privacy.html" class="nav-link" data-translate="safety">Privacy & Safety</a>
+        </div>
+    </header>
+
+    <main class="max-width-container">
+        <section class="fade-in-el">
+            
+            <div class="hero" style="margin-bottom:32px;">
+                <h2>SDG-16 Control Room Dashboard</h2>
+                <p style="font-size:15px; margin-top:4px;">Unified community reports audit list and analytics dashboard</p>
+                <span id="connection-badge" class="badge badge-warning" style="margin:8px auto 0 auto;">Checking Connection...</span>
+            </div>
+
+            <!-- Stats Bar Row -->
+            <div class="stats-bar">
+                <div class="glass-card stat-item">
+                    <div>
+                        <span class="stat-label" data-translate="total_logs">Total Logs</span>
+                        <span id="stat-total" class="stat-val">0</span>
+                    </div>
+                    <span class="stat-icon" style="color:var(--primary);">📁</span>
+                </div>
+                <div class="glass-card stat-item">
+                    <div>
+                        <span class="stat-label" data-translate="severe_flags">High & Critical Flags</span>
+                        <span id="stat-severe" class="stat-val">0</span>
+                    </div>
+                    <span class="stat-icon" style="color:var(--accent-red);">⚠️</span>
+                </div>
+                <div class="glass-card stat-item">
+                    <div>
+                        <span class="stat-label">AI Spam Filtered</span>
+                        <span id="stat-spam" class="stat-val">0</span>
+                    </div>
+                    <span class="stat-icon" style="color:var(--accent-yellow);">🛡️</span>
+                </div>
+                <div class="glass-card stat-item">
+                    <div>
+                        <span class="stat-label">AI Trust Accuracy</span>
+                        <span id="stat-confidence" class="stat-val">0%</span>
+                    </div>
+                    <span class="stat-icon" style="color:var(--accent-green);">🤖</span>
+                </div>
+            </div>
+
+            <!-- Charts Dashboards Grid -->
+            <div class="dashboard-grid">
+                <!-- Trend line and category pie charts -->
+                <div class="dashboard-charts">
+                    <div class="glass-panel chart-panel">
+                        <div class="chart-header">
+                            <h3>Integrity Trends Over Time</h3>
+                            <span style="font-size:11px; color:var(--text-muted); font-weight:700;">Daily aggregate</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chart-trend"></canvas>
+                        </div>
+                    </div>
+                    <div class="glass-panel chart-panel">
+                        <div class="chart-header">
+                            <h3>Categories Distribution</h3>
+                            <span style="font-size:11px; color:var(--text-muted); font-weight:700;">SDG classifications</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chart-categories"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Departments bar and Severity radar chart -->
+                <div class="chart-grid">
+                    <div class="glass-panel chart-panel">
+                        <div class="chart-header">
+                            <h3>Department Breakdown</h3>
+                            <span style="font-size:11px; color:var(--text-muted); font-weight:700;">Institutional filters</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chart-departments"></canvas>
+                        </div>
+                    </div>
+                    <div class="glass-panel chart-panel">
+                        <div class="chart-header">
+                            <h3>Severity Profiles</h3>
+                            <span style="font-size:11px; color:var(--text-muted); font-weight:700;">Urgency classifications</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chart-severity"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search, Filters and Sorting toolbar -->
+            <div class="glass-panel search-filter-panel">
+                <div class="search-wrapper">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input type="text" id="search-input" placeholder="Search through titles, IDs or locations..." class="input-control search-input" data-translate="search_placeholder">
+                </div>
+
+                <select id="dept-filter" class="filter-select">
+                    <option value="all">All Departments</option>
+                    <option value="Police & Law Enforcement">Police & Law Enforcement</option>
+                    <option value="Judiciary & Courts">Judiciary & Courts</option>
+                    <option value="Municipal & Public Works">Municipal & Public Works</option>
+                    <option value="Finance & Revenue">Finance & Revenue</option>
+                    <option value="Education & Health Services">Education & Health Services</option>
+                    <option value="Agriculture & Water Resources">Agriculture & Water Resources</option>
+                    <option value="General Administration">General Administration</option>
+                </select>
+
+                <select id="cat-filter" class="filter-select">
+                    <option value="all">All Categories</option>
+                    <option value="Bribery & Graft">Bribery & Graft</option>
+                    <option value="Judicial Abuse of Power">Judicial Abuse of Power</option>
+                    <option value="Embezzlement & Misappropriation">Embezzlement & Misappropriation</option>
+                    <option value="Administrative Negligence">Administrative Negligence</option>
+                    <option value="Human Rights Violations">Human Rights Violations</option>
+                    <option value="General Public Concern">General Public Concern</option>
+                </select>
+
+                <select id="severity-filter" class="filter-select">
+                    <option value="all">All Severities</option>
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                    <option value="Critical">Critical</option>
+                </select>
+
+                <select id="status-filter" class="filter-select">
+                    <option value="all">All Statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Under Review">Under Review</option>
+                    <option value="Resolved">Resolved</option>
+                    <option value="Flagged">Flagged / Review</option>
+                </select>
+
+                <select id="sort-order" class="filter-select">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="severity">Highest Severity</option>
+                </select>
+
+                <button class="btn btn-secondary" id="sync-list-btn" title="Force Synchronize with Cloud Database" style="padding:10px 16px;">
+                    <i data-lucide="refresh-cw" style="width:14px; height:14px;"></i>
+                    <span data-translate="sync_list">Sync List ⟳</span>
+                </button>
+            </div>
+
+            <!-- Export Buttons toolbar -->
+            <div style="display:flex; justify-content:flex-end; gap:12px; margin-bottom:20px;">
+                <button class="btn btn-secondary" onclick="window.UTILS.exportToCSV(window.App.complaints, 'complaints_export.csv')" style="padding:8px 16px; font-size:12px;">
+                    <i data-lucide="download" style="width:14px; height:14px;"></i>
+                    Export CSV
+                </button>
+                <button class="btn btn-secondary" onclick="window.print()" style="padding:8px 16px; font-size:12px;">
+                    <i data-lucide="printer" style="width:14px; height:14px;"></i>
+                    Print Directory
+                </button>
+            </div>
+
+            <!-- Dynamic Submissions grid rendering -->
+            <div id="submissions-list" class="submissions-grid">
+                <!-- Skeleton screen load screens injection -->
+                <div class="col-span-full" style="grid-column: 1 / -1; display:flex; justify-content:center; padding:50px;">
+                    <div class="skeleton" style="width:50px; height:50px; border-radius:50%;"></div>
+                </div>
+            </div>
+
+            <!-- Pagination controls -->
+            <div id="pagination-controls" class="pagination"></div>
+
+        </section>
+    </main>
+
+    <!-- Detailed Modal -->
+    <div id="detail-modal" class="modal-overlay">
+        <div class="glass-panel modal-content">
+            <button id="modal-close-btn" class="modal-close" aria-label="Close modal">✕</button>
+            
+            <div class="modal-header">
+                <h3 id="detail-title">Complaint Title</h3>
+                
+                <div class="modal-meta-row">
+                    <span id="detail-date" class="badge badge-mono">Date</span>
+                    <span id="detail-severity" class="badge">Severity</span>
+                    <span id="detail-classification" class="badge badge-info">Classification</span>
+                </div>
+            </div>
+
+            <div class="modal-divider"></div>
+
+            <div style="font-size:12px; color:var(--text-muted); display:flex; flex-direction:column; gap:6px; margin-bottom:16px;">
+                <span id="detail-location">📍 Location: Area, City, State</span>
+                <span id="detail-dept">🏛️ Department: Department Name</span>
+            </div>
+
+            <p id="detail-text" class="modal-body">Detailed description of the public issue logged...</p>
+
+            <div class="modal-attachments">
+                <img id="detail-image" class="modal-media" style="display:none;" alt="Proof validation image">
+                <video id="detail-video" class="modal-media" style="display:none;" controls></video>
+            </div>
+
+            <!-- Offline QR Tracking code display -->
+            <div id="detail-qr-container" style="text-align:center;"></div>
+
+            <!-- AI Safety Diagnostics Audit Panel -->
+            <div id="detail-ai-metrics"></div>
+
+            <!-- Action Status timeline -->
+            <div class="timeline-section">
+                <h4 class="timeline-title">Audit Action Trail</h4>
+                <div id="detail-timeline"></div>
+            </div>
+
+            <div class="modal-divider"></div>
+
+            <div style="display:flex; gap:16px; mt-4; margin-top:20px;">
+                <button id="detail-delete-btn" class="btn btn-secondary" style="flex-grow:1; background:var(--accent-red-light); color:var(--accent-red); border-color:rgba(244,63,94,0.25);">
+                    <i data-lucide="trash-2" style="width:14px; height:14px; display:inline-align; vertical-align:middle; margin-right:4px;"></i>
+                    Delete local record
+                </button>
+                <button id="detail-print-btn" class="btn btn-secondary">
+                    <i data-lucide="printer" style="width:14px; height:14px; display:inline-align; vertical-align:middle; margin-right:4px;"></i>
+                    Print/Export PDF
+                </button>
+                <button onclick="window.UI.closeDetailModal()" class="btn btn-primary" style="padding:0 24px;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <a href="register.html" class="fab" title="Log New Community Concern" aria-label="Log new concern">
+        <i data-lucide="plus"></i>
+    </a>
+
+    <footer>
+        <div class="max-width-container">
+            <p style="margin-bottom:4px;">SatyaSetu Civic Transparency Network — Made in alignment with SDG Goal 16.</p>
+            <p style="font-size:11px; color:var(--text-muted);">Development team: Arshit, Arjun, Madhavi and Prabhnoor</p>
+        </div>
+    </footer>
+
+    <!-- Firebase Compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <!-- Custom Scripts -->
+    <script src="config/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/validation.js"></script>
+    <script src="js/ai.js"></script>
+    <script src="js/firebase.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+
+    <script>
+        window.addEventListener('load', () => {
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        });
+    </script>
+</body>
+</html>

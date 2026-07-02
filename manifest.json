@@ -1,0 +1,24 @@
+{
+  "name": "SatyaSetu SDG-16 Civic Integrity Hub",
+  "short_name": "SatyaSetu",
+  "description": "Secure, transparent community concern reporting and statistics dashboard aligning with UN Sustainable Development Goal 16.",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#060913",
+  "theme_color": "#4f46e5",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "https://i.ibb.co/b55QTmGR/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://i.ibb.co/b55QTmGR/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

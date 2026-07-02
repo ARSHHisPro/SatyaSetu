@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SatyaSetu - Register Community Complaint</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/b55QTmGR/logo.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/animations.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+    <div id="toast-container" class="toast-overlay"></div>
+
+    <header>
+        <div class="max-width-container header-content">
+            <a href="index.html" class="brand">
+                <span data-translate="brand">SatyaSetu</span>
+                <span class="sdg-badge">SDG 16</span>
+            </a>
+
+            <nav class="desktop-nav">
+                <a href="index.html" class="nav-link" data-translate="home">Home</a>
+                <a href="register.html" class="nav-link active" data-translate="register">Register Complaint</a>
+                <a href="dashboard.html" class="nav-link" data-translate="dashboard">Reports Hub</a>
+                <a href="privacy.html" class="nav-link" data-translate="safety">Privacy & Safety</a>
+            </nav>
+
+            <div class="header-actions">
+                <button class="action-btn" id="lang-toggle-btn" title="Toggle Language">हिन्दी</button>
+                <button class="action-btn" id="theme-toggle-btn" title="Toggle Theme" aria-label="Toggle theme">
+                    <i data-lucide="sun"></i>
+                </button>
+                <button class="action-btn" id="reset-demo-btn" title="Reset Sandbox Backups" data-translate="reset_demo" style="width:auto; padding:0 12px; font-size:11px; font-weight:700;">
+                    Reset Demo
+                </button>
+                <button class="action-btn mobile-nav-toggle" id="mobile-menu-btn" onclick="document.getElementById('mobile-nav-dropdown').classList.toggle('active')" aria-label="Toggle mobile menu">
+                    <i data-lucide="menu"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div id="mobile-nav-dropdown" class="glass-panel mobile-dropdown">
+            <a href="index.html" class="nav-link" data-translate="home">Home</a>
+            <a href="register.html" class="nav-link active" data-translate="register">Register Complaint</a>
+            <a href="dashboard.html" class="nav-link" data-translate="dashboard">Reports Hub</a>
+            <a href="privacy.html" class="nav-link" data-translate="safety">Privacy & Safety</a>
+        </div>
+    </header>
+
+    <main class="max-width-container">
+        <section class="fade-in-el">
+            
+            <div class="glass-panel form-panel">
+                <!-- Glowing line style indicator matching target -->
+                <div class="form-header">
+                    <h2 data-translate="form_title">Log Community Concern</h2>
+                    <p data-translate="form_subtitle">All fields marked with an asterisk (*) are required.</p>
+                </div>
+
+                <!-- Strict Privacy Warning -->
+                <div class="alert">
+                    <h4>
+                        <i data-lucide="alert-triangle"></i>
+                        Strict Privacy Compliance Notice
+                    </h4>
+                    Do not submit names, telephone lines, ID cards, addresses, or structural payment codes. Simply describe the infrastructure deficiencies or official actions encountered.
+                </div>
+
+                <!-- Draft Indicator -->
+                <div id="draft-indicator" class="draft-indicator" style="margin-bottom:16px;">
+                    <i data-lucide="check-circle" style="width:14px; height:14px;"></i>
+                    <span>Draft Auto-Saved</span>
+                </div>
+
+                <form id="complaint-form" novalidate>
+                    
+                    <!-- Honeypot anti-bot protection input (completely hidden from humans) -->
+                    <div style="display:none; opacity:0; width:0; height:0; overflow:hidden;" aria-hidden="true">
+                        <label for="website_url">Website Link</label>
+                        <input type="text" id="website_url" name="website_url" tabindex="-1" value="">
+                    </div>
+
+                    <!-- Date input field -->
+                    <div class="form-group">
+                        <label for="event-date" data-translate="field_date">Date of the Event *</label>
+                        <span class="help-text">Pick the date the transaction or issue took place.</span>
+                        <input type="date" id="event-date" class="input-control" required>
+                    </div>
+
+                    <!-- Title field -->
+                    <div class="form-group">
+                        <label for="complaint-title" data-translate="field_title">Complaint Title *</label>
+                        <span class="help-text">Sum up the public issue. Do not include personal names.</span>
+                        <input type="text" id="complaint-title" maxlength="120" placeholder="e.g. Irrigation channel concrete lining left incomplete" class="input-control" required>
+                        <span id="title-counter" class="char-counter">0 / 120</span>
+                    </div>
+
+                    <!-- Location group inputs -->
+                    <div class="form-group" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px;">
+                        <div>
+                            <label for="city-input">City *</label>
+                            <input type="text" id="city-input" placeholder="e.g. Bhatinda" class="input-control" required>
+                        </div>
+                        <div>
+                            <label for="state-input">State *</label>
+                            <select id="state-input" class="input-control" required>
+                                <option value="" disabled selected>Select State</option>
+                                <option value="Punjab">Punjab</option>
+                                <option value="Rajasthan">Rajasthan</option>
+                                <option value="Uttar Pradesh">Uttar Pradesh</option>
+                                <option value="Delhi">Delhi</option>
+                                <option value="Haryana">Haryana</option>
+                                <option value="Gujarat">Gujarat</option>
+                                <option value="Maharashtra">Maharashtra</option>
+                                <option value="Karnataka">Karnataka</option>
+                                <option value="Tamil Nadu">Tamil Nadu</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="area-input">Area / Street Location *</label>
+                            <input type="text" id="area-input" placeholder="e.g. Sector 4 Canal" class="input-control" required>
+                        </div>
+                    </div>
+
+                    <!-- AI Suggested inputs overrides (optional) -->
+                    <div class="form-group" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                        <div>
+                            <label for="dept-select">Department (AI will auto-suggest if blank)</label>
+                            <select id="dept-select" class="input-control">
+                                <option value="" selected>Auto-predict from details</option>
+                                <option value="Police & Law Enforcement">Police & Law Enforcement</option>
+                                <option value="Judiciary & Courts">Judiciary & Courts</option>
+                                <option value="Municipal & Public Works">Municipal & Public Works</option>
+                                <option value="Finance & Revenue">Finance & Revenue</option>
+                                <option value="Education & Health Services">Education & Health Services</option>
+                                <option value="Agriculture & Water Resources">Agriculture & Water Resources</option>
+                                <option value="General Administration">General Administration</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="cat-select">Classification Category (AI will auto-suggest if blank)</label>
+                            <select id="cat-select" class="input-control">
+                                <option value="" selected>Auto-predict from details</option>
+                                <option value="Bribery & Graft">Bribery & Graft</option>
+                                <option value="Judicial Abuse of Power">Judicial Abuse of Power</option>
+                                <option value="Embezzlement & Misappropriation">Embezzlement & Misappropriation</option>
+                                <option value="Administrative Negligence">Administrative Negligence</option>
+                                <option value="Human Rights Violations">Human Rights Violations</option>
+                                <option value="General Public Concern">General Public Concern</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Details field -->
+                    <div class="form-group">
+                        <label for="complaint-details" data-translate="field_details">Incident Details *</label>
+                        <span class="help-text">Describe what was witnessed, observed, or investigated. Keep anonymous.</span>
+                        <textarea id="complaint-details" maxlength="1000" placeholder="e.g. The concrete lining of the water channel halted repairs three months ago, leaving mud lining accumulation..." class="input-control" required></textarea>
+                        <span id="details-counter" class="char-counter">0 / 1000</span>
+                    </div>
+
+                    <!-- Drag & Drop Media Uploads -->
+                    <div class="media-uploads">
+                        <!-- Image Dropzone -->
+                        <div class="form-group">
+                            <label data-translate="field_proof">Attach Proof Image</label>
+                            <span class="help-text">Upload validation photos. Max 4MB. Compresses automatically.</span>
+                            
+                            <div class="dropzone" id="image-dropzone">
+                                <i data-lucide="image" class="dropzone-icon"></i>
+                                <span class="dropzone-label">Drag & drop photo or click</span>
+                                <span class="dropzone-status">Images up to 4MB</span>
+                                <input type="file" id="image-upload" accept="image/*" style="display:none;">
+                                
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar"></div>
+                                </div>
+                                <div class="media-preview-container">
+                                    <img src="" alt="Proof Preview">
+                                    <button type="button" class="media-preview-remove">✕</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Video Dropzone -->
+                        <div class="form-group">
+                            <label data-translate="field_video">Attach Video Clip</label>
+                            <span class="help-text">Provide on-site walkthrough clip. Max 15MB.</span>
+                            
+                            <div class="dropzone" id="video-dropzone">
+                                <i data-lucide="video" class="dropzone-icon"></i>
+                                <span class="dropzone-label">Drag & drop video or click</span>
+                                <span class="dropzone-status">Videos up to 15MB</span>
+                                <input type="file" id="video-upload" accept="video/*" style="display:none;">
+                                
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar"></div>
+                                </div>
+                                <div class="media-preview-container">
+                                    <video src="" controls></video>
+                                    <button type="button" class="media-preview-remove">✕</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Verification Section (Anti-Bot) -->
+                    <div class="antibot-section">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="bot-check" style="display:none;">
+                            <span class="custom-checkbox">
+                                <i data-lucide="check"></i>
+                            </span>
+                            <span>I am not a robot (Requires verification challenge)</span>
+                        </label>
+                        
+                        <!-- Math challenge overlay -->
+                        <div class="math-challenge" id="math-challenge-section">
+                            <span class="math-question" id="math-label">7 + 2 = ?</span>
+                            <input type="number" id="math-input" placeholder="Answer" class="input-control math-input">
+                        </div>
+                    </div>
+
+                    <!-- Privacy Consent checkbox -->
+                    <div class="form-group" style="display:flex; gap:10px; align-items:flex-start; margin-bottom:32px;">
+                        <input type="checkbox" id="user-consent" style="margin-top:4px; width:16px; height:16px; cursor:pointer;">
+                        <label for="user-consent" style="font-size:12px; font-weight:600; color:var(--text-muted); cursor:pointer;" data-translate="consent_text">
+                            I verify that I have not supplied any private contact details, identities, or physical addresses. I agree to save this structured log.
+                        </label>
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div class="form-actions">
+                        <button id="submit-btn" type="submit" class="btn btn-primary" style="background:var(--accent-red); box-shadow: 0 4px 14px rgba(248, 113, 113, 0.35);" data-translate="btn_submit">Submit Incident</button>
+                        <button id="cancel-btn" type="button" class="btn btn-secondary" data-translate="btn_cancel">Cancel</button>
+                    </div>
+
+                </form>
+            </div>
+            
+        </section>
+    </main>
+
+    <footer>
+        <div class="max-width-container">
+            <p style="margin-bottom:4px;">SatyaSetu Civic Transparency Network — Made in alignment with SDG Goal 16.</p>
+            <p style="font-size:11px; color:var(--text-muted);">Development team: Arshit, Arjun, Madhavi and Prabhnoor</p>
+        </div>
+    </footer>
+
+    <!-- Firebase Compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <!-- Custom Scripts -->
+    <script src="config/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/validation.js"></script>
+    <script src="js/ai.js"></script>
+    <script src="js/firebase.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+
+    <script>
+        window.addEventListener('load', () => {
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        });
+    </script>
+</body>
+</html>
