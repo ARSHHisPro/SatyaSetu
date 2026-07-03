@@ -79,8 +79,17 @@ const TRANSLATIONS = {
 };
 
 window.onload = function() {
-    initApp();
+    setTimeout(hideLoader, 3000); // Max 3s fallback
+    initApp().then(hideLoader).catch(hideLoader);
 };
+
+function hideLoader() {
+    const loader = document.getElementById('loading-screen');
+    if (loader && !loader.classList.contains('fade-out')) {
+        loader.classList.add('fade-out');
+        setTimeout(() => loader.remove(), 600);
+    }
+}
 
 async function initApp() {
     // 1. Theme Configuration load
@@ -226,6 +235,22 @@ function setupNavigation() {
                 window.location.reload();
             }
         };
+    }
+
+    const dropdown = document.querySelector('.nav-dropdown');
+    const dropdownBtn = document.querySelector('.nav-dropdown-btn');
+    if (dropdown && dropdownBtn) {
+        dropdownBtn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropdown.classList.toggle('active');
+        };
+        
+        document.addEventListener('click', (e) => {
+            if (!dropdown.contains(e.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
     }
 }
 
