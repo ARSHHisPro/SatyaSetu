@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SatyaSetu - Interactive Integrity Map</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    <link rel="apple-touch-icon" href="logo.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Leaflet Map CSS/JS CDNs -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        .map-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin: 20px 0;
+            min-height: 550px;
+        }
+        
+        #map-container {
+            width: 100%;
+            height: 550px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+            box-shadow: 0 10px 30px var(--glass-shadow);
+        }
+
+        /* Premium Cyber Dark Tiles Filter */
+        .dark-theme .leaflet-tile-container {
+            filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+        }
+
+        .dark-theme .leaflet-container {
+            background: #0c0a25;
+        }
+
+        .leaflet-popup-content-wrapper {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            border-radius: var(--radius-sm);
+            box-shadow: 0 8px 24px var(--glass-shadow);
+        }
+
+        .leaflet-popup-tip {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+        }
+
+        .leaflet-container a.leaflet-popup-close-button {
+            color: var(--text-muted);
+        }
+
+        .map-sidebar-card {
+            max-height: 550px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 20px;
+        }
+
+        .map-item-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .map-item-card:hover {
+            background: rgba(99, 102, 241, 0.08);
+            transform: translateX(4px);
+        }
+
+        @media (max-width: 768px) {
+            .map-grid {
+                grid-template-columns: 1fr;
+            }
+            #map-container {
+                height: 380px;
+            }
+            .map-sidebar-card {
+                max-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body id="page-map">
+
+    <div id="toast-container" class="toast-overlay"></div>
+
+    <header>
+        <div class="max-width-container header-content">
+            <a href="index.html" class="brand">
+                <span data-translate="brand">SatyaSetu</span>
+                <span class="sdg-badge">SDG 16</span>
+            </a>
+
+                                    <nav class="desktop-nav">
+                <a href="index.html" class="nav-link" data-translate="home">Home</a>
+                <a href="report.html" class="nav-link" data-translate="register">Register Complaint</a>
+                <a href="about.html" class="nav-link">About</a>
+                <div class="nav-dropdown active">
+                    <button class="nav-dropdown-btn">Explore <i data-lucide="chevron-down" style="width:12px; height:12px; margin-left:4px; display:inline-block; vertical-align:middle;"></i></button>
+                    <div class="nav-dropdown-content">
+                        <a href="dashboard.html" class="" data-translate="dashboard">Reports Hub</a>
+                        <a href="map.html" class="active">Interactive Map</a>
+                        <a href="quiz.html" class="">Integrity Quiz</a>
+                        <a href="analytics.html" class="">Analytics</a>
+                        <a href="complaints.html" class="">All Complaints</a>
+                        <a href="privacy.html" class="" data-translate="safety">Privacy & Safety</a>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="header-actions">
+                <button class="action-btn" id="lang-toggle-btn" title="Toggle Language">हिन्दी</button>
+                <button class="action-btn" id="theme-toggle-btn" title="Toggle Theme" aria-label="Toggle theme">
+                    <i data-lucide="sun"></i>
+                </button>
+                <button class="action-btn" id="reset-demo-btn" title="Reset Sandbox Backups" data-translate="reset_demo" style="width:auto; padding:0 12px; font-size:11px; font-weight:700;">
+                    Reset Demo
+                </button>
+                <button class="action-btn mobile-nav-toggle" id="mobile-menu-btn" onclick="document.getElementById('mobile-nav-dropdown').classList.toggle('active')" aria-label="Toggle mobile menu">
+                    <i data-lucide="menu"></i>
+                </button>
+            </div>
+        </div>
+        
+                        <div id="mobile-nav-dropdown" class="glass-panel mobile-dropdown">
+            <a href="index.html" class="nav-link" data-translate="home">Home</a>
+            <a href="report.html" class="nav-link" data-translate="register">Register Complaint</a>
+            <a href="dashboard.html" class="nav-link" data-translate="dashboard">Reports Hub</a>
+            <a href="map.html" class="nav-link active">Interactive Map</a>
+            <a href="quiz.html" class="nav-link">Integrity Quiz</a>
+            <a href="analytics.html" class="nav-link">Analytics</a>
+            <a href="complaints.html" class="nav-link">All Complaints</a>
+            <a href="about.html" class="nav-link">About</a>
+            <a href="privacy.html" class="nav-link" data-translate="safety">Privacy & Safety</a>
+            <a href="settings.html" class="nav-link">Settings</a>
+        </div>
+    </header>
+
+    <main class="max-width-container">
+        <section class="fade-in-el" style="margin: 20px 0;">
+            <div style="margin-bottom:16px;">
+                <h2 style="font-size:28px; font-weight:900;">🗺️ Interactive Integrity Map</h2>
+                <p style="color:var(--text-muted); font-size:13px; margin-top:4px;">Analyze civic complaints mapped geographically to isolate structural integrity hotspots.</p>
+            </div>
+
+            <div class="map-grid">
+                <div id="map-container">
+                    <div id="map" style="width:100%; height:100%;"></div>
+                </div>
+
+                <div class="glass-panel map-sidebar-card">
+                    <h3 style="font-size:16px; font-weight:800; border-bottom:1px solid var(--glass-border); padding-bottom:8px; margin-bottom:8px;">Recent Mapped Cases</h3>
+                    <div id="map-recent-list" style="display:flex; flex-direction:column; gap:8px;">
+                        <!-- JS injected list items -->
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="max-width-container">
+            <p>SatyaSetu Civic Transparency Network — Made in alignment with SDG Goal 16.</p>
+        </div>
+    </footer>
+
+    <!-- Firebase Compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <!-- Project Modules -->
+    <script src="config.js"></script>
+    <script src="utils.js"></script>
+    <script src="validation.js"></script>
+    <script src="ai.js"></script>
+    <script src="firebase.js"></script>
+    <script src="ui.js"></script>
+    <script src="app.js"></script>
+
+    <script>
+        // Dictionary mapping common Indian cities to GPS coordinates
+        const CITY_COORDINATES = {
+            "jaipur": [26.9124, 75.7873],
+            "noida": [28.5355, 77.3910],
+            "bhatinda": [30.2110, 74.9455],
+            "delhi": [28.6139, 77.2090],
+            "mumbai": [19.0760, 72.8777],
+            "bangalore": [12.9716, 77.5946],
+            "chennai": [13.0827, 80.2707],
+            "kolkata": [22.5726, 88.3639],
+            "lucknow": [26.8467, 80.9462],
+            "chandigarh": [30.7333, 76.7794],
+            "patna": [25.5941, 85.1376],
+            "hyderabad": [17.3850, 78.4867],
+            "pune": [18.5204, 73.8567],
+            "ahmedabad": [23.0225, 72.5714]
+        };
+
+        let leafletMap = null;
+        let markersGroup = null;
+
+        // Run map rendering when App loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            setTimeout(initIntegrityMap, 800); // Allow app.js database fetch to complete
+        });
+
+        function initIntegrityMap() {
+            // Initial center of India coordinates
+            leafletMap = L.map('map').setView([21.7679, 78.8718], 5);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 18,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(leafletMap);
+
+            markersGroup = L.layerGroup().addTo(leafletMap);
+            plotComplaintMarkers();
+
+            // Re-plot when complaints database resets or syncs
+            document.addEventListener('page-changed', plotComplaintMarkers);
+        }
+
+        function plotComplaintMarkers() {
+            if (!markersGroup || !window.App || !window.App.complaints) return;
+            
+            markersGroup.clearLayers();
+            const sidebar = document.getElementById('map-recent-list');
+            if (sidebar) sidebar.innerHTML = '';
+
+            const list = window.App.complaints;
+            if (list.length === 0) {
+                if (sidebar) sidebar.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:12px;">No cases mapped.</p>';
+                return;
+            }
+
+            let markerCount = 0;
+
+            list.forEach(item => {
+                const cityName = String(item.city || '').trim().toLowerCase();
+                let coords = CITY_COORDINATES[cityName];
+
+                // Fallback slight offset near center of India to prevent crash and overlap
+                if (!coords) {
+                    const randomOffsetLat = (Math.random() - 0.5) * 6;
+                    const randomOffsetLng = (Math.random() - 0.5) * 6;
+                    coords = [21.7679 + randomOffsetLat, 78.8718 + randomOffsetLng];
+                }
+
+                const dateStr = window.UTILS.formatDate(item.created_at || item.event_date);
+                const sevClass = window.UI.severityBadgeClass(item.severity);
+                
+                // Color mapping for markers
+                let markerColor = "#fbbf24"; // medium yellow
+                if (item.severity === 'Critical' || item.severity === 'High') markerColor = "#f87171"; // red
+                else if (item.severity === 'Low') markerColor = "#34d399"; // green
+
+                // Custom Leaflet Circle Marker
+                const marker = L.circleMarker(coords, {
+                    radius: 9,
+                    fillColor: markerColor,
+                    color: "#fff",
+                    weight: 1.5,
+                    opacity: 1,
+                    fillOpacity: 0.95
+                });
+
+                // Marker Popup
+                const popupContent = `
+                    <div style="font-family:'Outfit', sans-serif; padding:4px; max-width:200px;">
+                        <span class="badge ${sevClass}" style="font-size:9px; padding:2px 6px;">${item.severity}</span>
+                        <h4 style="margin: 6px 0 4px 0; font-size:13px; font-weight:800;">${window.UTILS.escapeHtml(item.title)}</h4>
+                        <p style="margin:0 0 8px 0; font-size:11px; color:#555;">📍 ${window.UTILS.escapeHtml(item.area)}, ${window.UTILS.escapeHtml(item.city)}</p>
+                        <a href="complaint.html#${item.id}" style="font-size:11px; color:#6366f1; font-weight:800; text-decoration:none;">View Case Details →</a>
+                    </div>
+                `;
+                marker.bindPopup(popupContent);
+                markersGroup.addLayer(marker);
+                markerCount++;
+
+                // Append Sidebar list item
+                if (sidebar && markerCount <= 5) {
+                    const div = document.createElement('div');
+                    div.className = 'map-item-card';
+                    div.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                            <span class="badge ${sevClass}" style="font-size:8px;">${item.severity}</span>
+                            <span style="font-size:9px; color:var(--text-muted);">${dateStr}</span>
+                        </div>
+                        <h4 style="font-size:12px; font-weight:800; color:var(--text-main); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${window.UTILS.escapeHtml(item.title)}</h4>
+                        <span style="font-size:10px; color:var(--text-muted);">📍 ${window.UTILS.escapeHtml(item.city)}, ${window.UTILS.escapeHtml(item.state)}</span>
+                    `;
+                    div.onclick = () => {
+                        leafletMap.setView(coords, 8);
+                        marker.openPopup();
+                    };
+                    sidebar.appendChild(div);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

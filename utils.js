@@ -22,11 +22,17 @@ window.UTILS = {
     formatDate(dateStr) {
         const date = new Date(dateStr);
         if (isNaN(date.getTime())) return 'Recent';
-        return date.toLocaleDateString(undefined, {
+        const hasTime = String(dateStr).includes('T') || String(dateStr).includes(':') || String(dateStr).includes(' ');
+        const dateOptions = {
             year: 'numeric',
             month: 'short',
             day: 'numeric'
-        });
+        };
+        if (hasTime) {
+            dateOptions.hour = '2-digit';
+            dateOptions.minute = '2-digit';
+        }
+        return date.toLocaleDateString(undefined, dateOptions);
     },
 
     // Rate Limiting
@@ -293,5 +299,27 @@ window.UTILS = {
         }
         svg += `</svg>`;
         return svg;
+    },
+
+    // Generates a local SHA-256 cryptographic digest of a text string (Web Crypto API)
+    async generateSHA256(text) {
+        if (!text) return "";
+        try {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(text);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        } catch (e) {
+            console.error("SHA256 generation failed:", e);
+            // Simple fallback hash
+            let h = 0;
+            for (let i = 0; i < text.length; i++) {
+                h = (h << 5) - h + text.charCodeAt(i);
+                h |= 0;
+            }
+            return "fallback-" + Math.abs(h).toString(16);
+        }
     }
 };

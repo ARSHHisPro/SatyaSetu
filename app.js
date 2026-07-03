@@ -326,6 +326,59 @@ function setupFormListeners() {
             mathChallengeSection.classList.remove('active');
         }
     });
+
+    const dictationBtn = document.getElementById('voice-dictate-btn');
+    const detailsField = document.getElementById('complaint-details');
+    if (dictationBtn && detailsField) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            dictationBtn.style.display = 'none';
+        } else {
+            const recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            let isListening = false;
+            dictationBtn.onclick = (e) => {
+                e.preventDefault();
+                if (!isListening) {
+                    recognition.lang = window.App.currentLanguage === 'hi' ? 'hi-IN' : 'en-US';
+                    try {
+                        recognition.start();
+                        dictationBtn.innerHTML = '🎤 Listening...';
+                        dictationBtn.style.background = 'var(--neon-rose)';
+                        dictationBtn.style.color = '#fff';
+                        isListening = true;
+                    } catch (err) {
+                        console.error(err);
+                    }
+                } else {
+                    recognition.stop();
+                }
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                detailsField.value = detailsField.value ? detailsField.value + " " + transcript : transcript;
+                const counter = document.getElementById('details-counter');
+                if (counter) counter.textContent = `${detailsField.value.length} / 1000`;
+                triggerDraftAutosave();
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                dictationBtn.innerHTML = '🎤 Speak Details';
+                dictationBtn.style.background = 'rgba(34, 211, 238, 0.15)';
+                dictationBtn.style.color = 'var(--accent-cyan)';
+            };
+
+            recognition.onerror = (err) => {
+                console.error("Speech recognition error:", err);
+                isListening = false;
+                dictationBtn.innerHTML = '🎤 Dictation Failed';
+            };
+        }
+    }
 }
 
 function generateAntiBotMath() {
@@ -392,8 +445,13 @@ async function handleSubmitComplaint() {
         const analysis = window.AI.performAnalysis(title, details, window.App.complaints, botVerdict);
         
         const dateHash = date.replace(/-/g, '');
-        const randomCode = Math.floor(1000 + Math.random() * 9000);
-        const uniqueId = `SS-${dateHash}-${randomCode}`;
+        const dailyCount = window.App.complaints.filter(c => c.event_date === date).length;
+        const sequenceCode = String(dailyCount + 1).padStart(2, '0');
+        const uniqueId = `SS-${dateHash}-${sequenceCode}`;
+
+        // Compute local cryptographic integrity hash
+        const hashContent = `${title}|${details}|${date}|${area},${city},${state}`;
+        const cryptoHash = await window.UTILS.generateSHA256(hashContent);
 
         const record = {
             id: uniqueId,
@@ -409,11 +467,13 @@ async function handleSubmitComplaint() {
             priority: analysis.priority,
             urgency: analysis.urgency,
             tags: analysis.tags,
-            image_data: selectedImageBase64,
+            image_data: selectedImagesList.length > 0 ? selectedImagesList[0] : null,
+            image_list: selectedImagesList,
             video_data: selectedVideoBase64,
             created_at: new Date().toISOString(),
             status: "Pending",
-            ai_analysis: analysis.ai_analysis
+            ai_analysis: analysis.ai_analysis,
+            hash: cryptoHash
         };
 
         let savedToCloud = false;
@@ -466,6 +526,8 @@ function triggerDraftAutosave() {
     if (window.App.draftTimer) clearTimeout(window.App.draftTimer);
     
     window.App.draftTimer = setTimeout(() => {
+        if (document.body.id !== 'page-report') return;
+        
         const draft = {
             date: document.getElementById('event-date').value,
             title: document.getElementById('complaint-title').value,
@@ -475,7 +537,7 @@ function triggerDraftAutosave() {
             area: document.getElementById('area-input').value,
             dept: document.getElementById('dept-select').value,
             cat: document.getElementById('cat-select').value,
-            image: selectedImageBase64,
+            images: selectedImagesList,
             video: selectedVideoBase64
         };
 
@@ -510,16 +572,17 @@ function loadSavedDraft() {
             document.getElementById('title-counter').textContent = `${(draft.title || '').length} / 120`;
             document.getElementById('details-counter').textContent = `${(draft.details || '').length} / 1000`;
 
-            if (draft.image) {
-                selectedImageBase64 = draft.image;
+            const imgList = draft.images || (draft.image ? [draft.image] : []);
+            if (imgList && imgList.length > 0) {
+                selectedImagesList = imgList;
                 const drop = document.getElementById('image-dropzone');
                 const prev = drop?.querySelector('.media-preview-container');
                 if (prev) {
                     prev.classList.add('active');
-                    prev.querySelector('img').src = draft.image;
+                    prev.querySelector('img').src = imgList[0];
                 }
                 const label = drop?.querySelector('.dropzone-status');
-                if (label) label.textContent = '✓ Saved Draft Image Recovered';
+                if (label) label.textContent = `✓ Recovered ${imgList.length} images from draft`;
             }
 
             if (draft.video) {
@@ -543,7 +606,7 @@ function loadSavedDraft() {
 
 function clearDraft() {
     localStorage.removeItem(window.CONFIG.DRAFT_STORAGE_KEY);
-    selectedImageBase64 = null;
+    selectedImagesList = [];
     selectedVideoBase64 = null;
 }
 
@@ -805,13 +868,64 @@ function renderComplaintDetails() {
 
     document.getElementById('detail-classification').textContent = `📂 ${item.classification}`;
 
-    // Render Proof Attachments
+    // Render Carousel for Images
     const img = document.getElementById('detail-image');
-    if (item.image_data) {
-        img.src = item.image_data;
-        img.style.display = 'block';
+    const images = item.image_list || (item.image_data ? [item.image_data] : []);
+    const carouselContainer = document.getElementById('detail-carousel-container') || img?.parentNode;
+
+    if (images.length > 0 && carouselContainer) {
+        if (img) img.style.display = 'none';
+        
+        let carouselDiv = document.getElementById('page-carousel-inner-box');
+        if (!carouselDiv) {
+            carouselDiv = document.createElement('div');
+            carouselDiv.id = 'page-carousel-inner-box';
+            carouselContainer.appendChild(carouselDiv);
+        }
+        carouselDiv.style.display = 'block';
+
+        let activeIdx = 0;
+        const renderCarousel = () => {
+            carouselDiv.innerHTML = `
+                <div class="carousel-wrapper" style="position:relative; width:100%; height:280px; overflow:hidden; border-radius:var(--radius-md); border:1px solid var(--glass-border); margin: 15px 0;">
+                    <img src="${images[activeIdx]}" style="width:100%; height:100%; object-fit:cover; transition: opacity var(--transition-fast);" />
+                    ${images.length > 1 ? `
+                        <button class="carousel-btn prev" style="position:absolute; left:15px; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.65); color:#fff; border:none; border-radius:50%; width:38px; height:38px; cursor:pointer; font-size:22px; line-height:34px; text-align:center;">‹</button>
+                        <button class="carousel-btn next" style="position:absolute; right:15px; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.65); color:#fff; border:none; border-radius:50%; width:38px; height:38px; cursor:pointer; font-size:22px; line-height:34px; text-align:center;">›</button>
+                        <div class="carousel-dots" style="position:absolute; bottom:15px; left:50%; transform:translateX(-50%); display:flex; gap:8px;">
+                            ${images.map((_, idx) => `<span style="width:10px; height:10px; border-radius:50%; background:${idx === activeIdx ? 'var(--primary)' : 'rgba(255,255,255,0.5)'};"></span>`).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            const prevBtn = carouselDiv.querySelector('.carousel-btn.prev');
+            const nextBtn = carouselDiv.querySelector('.carousel-btn.next');
+            if (prevBtn) {
+                prevBtn.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    activeIdx = (activeIdx - 1 + images.length) % images.length;
+                    renderCarousel();
+                };
+            }
+            if (nextBtn) {
+                nextBtn.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    activeIdx = (activeIdx + 1) % images.length;
+                    renderCarousel();
+                };
+            }
+        };
+        renderCarousel();
     } else {
-        img.style.display = 'none';
+        if (img) {
+            img.style.display = 'none';
+            img.src = '';
+        }
+        const carouselDiv = document.getElementById('page-carousel-inner-box');
+        if (carouselDiv) carouselDiv.style.display = 'none';
     }
 
     const vid = document.getElementById('detail-video');
@@ -820,6 +934,102 @@ function renderComplaintDetails() {
         vid.style.display = 'block';
     } else {
         vid.style.display = 'none';
+    }
+
+    // Display Cryptographic Hash
+    const hashEl = document.getElementById('detail-crypt-hash');
+    if (hashEl) {
+        hashEl.innerHTML = `
+            <div style="background:rgba(99, 102, 241, 0.05); border:1px solid var(--glass-border); padding:12px 16px; border-radius:var(--radius-sm); margin-top:16px; font-family:monospace; font-size:11px; word-break:break-all; display:flex; flex-direction:column; gap:4px;">
+                <span style="font-weight:800; color:var(--primary); font-family:'Outfit';">🛡️ SECURE CRYPTOGRAPHIC INTEGRITY HASH (SHA-256):</span>
+                <span>${item.hash || 'N/A (Historical Seed Data)'}</span>
+            </div>
+        `;
+    }
+
+    // Admin Interactive Chat/Updates board
+    const board = document.getElementById('detail-admin-board');
+    if (board) {
+        if (!item.comments) {
+            item.comments = [
+                { sender: "System", text: "Report digitally locked and registered in the SDG-16 Sandbox.", date: item.created_at || new Date().toISOString() }
+            ];
+        }
+        
+        const renderComments = () => {
+            const listHtml = item.comments.map(c => `
+                <div style="background:${c.sender === 'You' ? 'rgba(99, 102, 241, 0.08)' : 'rgba(255,255,255,0.03)'}; border:1px solid var(--glass-border); padding:10px 14px; border-radius:var(--radius-sm); margin-bottom:8px; font-size:12px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-weight:800; color:${c.sender === 'You' ? 'var(--neon-cyan)' : 'var(--neon-purple)'};">
+                        <span>👤 ${c.sender}</span>
+                        <span style="font-size:10px; color:var(--text-muted); font-weight:400;">${new Date(c.date).toLocaleTimeString()}</span>
+                    </div>
+                    <p style="color:var(--text-main);">${window.UTILS.escapeHtml(c.text)}</p>
+                </div>
+            `).join('');
+
+            board.innerHTML = `
+                <h3 style="font-size:15px; font-weight:800; margin-bottom:12px; display:flex; align-items:center; gap:8px;">💬 Administrative Audit Thread</h3>
+                <div id="comments-list-box" style="max-height:220px; overflow-y:auto; margin-bottom:12px; padding-right:4px;">
+                    ${listHtml}
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="comment-input-field" placeholder="Ask administrative auditor or post audit update..." style="flex-grow:1; background:var(--input-bg); border:1px solid var(--input-border); border-radius:var(--radius-sm); padding:10px; color:#fff; font-size:12px; outline:none;" />
+                    <button id="comment-send-btn" class="btn btn-primary" style="padding:10px 16px; font-size:12px; border-radius:var(--radius-sm);">Send</button>
+                </div>
+            `;
+            
+            const box = document.getElementById('comments-list-box');
+            if (box) box.scrollTop = box.scrollHeight;
+
+            const sendBtn = document.getElementById('comment-send-btn');
+            const inputField = document.getElementById('comment-input-field');
+
+            const handleSend = () => {
+                const text = inputField.value.trim();
+                if (!text) return;
+                
+                item.comments.push({
+                    sender: "You",
+                    text: text,
+                    date: new Date().toISOString()
+                });
+                inputField.value = '';
+                renderComments();
+                
+                setTimeout(() => {
+                    let replyText = "Understood. The administrative review team has logged this comment. We are continuing the verification of evidence.";
+                    if (text.toLowerCase().includes("status") || text.toLowerCase().includes("track")) {
+                        replyText = `Audit reference ID is ${item.id}. Status is currently set to ${item.status}.`;
+                    } else if (text.toLowerCase().includes("bribe") || text.toLowerCase().includes("money")) {
+                        replyText = "Alert: Allegations regarding monetary transactions are routed to the central anti-corruption division.";
+                    } else if (text.toLowerCase().includes("proof") || text.toLowerCase().includes("image")) {
+                        replyText = "Proof attachments have been cached and verified with cryptographic checksums.";
+                    }
+                    
+                    item.comments.push({
+                        sender: "SDG Audit Officer",
+                        text: replyText,
+                        date: new Date().toISOString()
+                    });
+                    renderComments();
+                    window.UI.showToast("Audit Feed Updated", "Received administrative response.", "info");
+                }, 2000);
+            };
+
+            if (sendBtn && inputField) {
+                sendBtn.onclick = (e) => {
+                    e.preventDefault();
+                    handleSend();
+                };
+                inputField.onkeydown = (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSend();
+                    }
+                };
+            }
+        };
+        renderComments();
     }
 
     // Generate QR tracking code
@@ -1027,24 +1237,24 @@ function setupPWAInstall() {
     const installBtn = document.getElementById('pwa-install-btn');
     const closeBtn = document.getElementById('pwa-close-banner');
 
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        if (installBanner) installBanner.style.display = 'flex';
-    });
+    const dismissed = localStorage.getItem('satyasetu_apk_dismissed');
+    if (installBanner && !dismissed) {
+        setTimeout(() => {
+            installBanner.style.display = 'flex';
+            installBanner.classList.add('fade-in-el');
+        }, 2000);
+    }
 
     if (installBtn) {
-        installBtn.onclick = async () => {
-            if (!deferredPrompt) return;
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            deferredPrompt = null;
+        installBtn.onclick = () => {
+            window.open('https://www.mediafire.com/file/w1fbvs9qskfehdt/SatyaSetu.apk/file', '_blank');
             if (installBanner) installBanner.style.display = 'none';
         };
     }
 
     if (closeBtn) {
         closeBtn.onclick = () => {
+            localStorage.setItem('satyasetu_apk_dismissed', 'true');
             if (installBanner) installBanner.style.display = 'none';
         };
     }

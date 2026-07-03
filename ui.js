@@ -1,6 +1,6 @@
 // Satyasetu - UI Controller, Modals, Forms & Drag-and-Drop Management (Global Namespace)
 
-let selectedImageBase64 = null;
+let selectedImagesList = [];
 let selectedVideoBase64 = null;
 let toastContainer = null;
 let itemsPerPage = 6;
@@ -17,9 +17,9 @@ window.UI = {
         }
 
         if (document.getElementById('image-dropzone')) {
-            this.setupDragAndDrop('image-dropzone', 'image-upload', 'image', (base64) => {
-                selectedImageBase64 = base64;
-                if (onFileSelectCallback) onFileSelectCallback('image', base64);
+            this.setupDragAndDrop('image-dropzone', 'image-upload', 'image', (images) => {
+                selectedImagesList = images;
+                if (onFileSelectCallback) onFileSelectCallback('image', images);
             });
         }
 
@@ -134,13 +134,21 @@ window.UI = {
             const files = e.dataTransfer.files;
             if (files.length) {
                 fileInput.files = files;
-                processFile(files[0]);
+                if (type === 'image') {
+                    processMultipleImages(files);
+                } else {
+                    processFile(files[0]);
+                }
             }
         });
 
         fileInput.addEventListener('change', () => {
             if (fileInput.files.length) {
-                processFile(fileInput.files[0]);
+                if (type === 'image') {
+                    processMultipleImages(fileInput.files);
+                } else {
+                    processFile(fileInput.files[0]);
+                }
             }
         });
 
@@ -152,16 +160,74 @@ window.UI = {
                 if (previewContainer.querySelector('img')) previewContainer.querySelector('img').src = '';
                 if (previewContainer.querySelector('video')) previewContainer.querySelector('video').src = '';
                 statusLabel.textContent = type === 'image' ? 'Images up to 4MB' : 'Videos up to 15MB';
-                onProcessedCallback(null);
+                if (type === 'image') {
+                    selectedImagesList = [];
+                    onProcessedCallback([]);
+                } else {
+                    selectedVideoBase64 = null;
+                    onProcessedCallback(null);
+                }
             };
         }
 
+        const processMultipleImages = async (files) => {
+            selectedImagesList = [];
+            if (progressContainer && progressBar) {
+                progressContainer.classList.add('active');
+                progressBar.style.width = '10%';
+            }
+            statusLabel.textContent = `Processing ${files.length} images...`;
+
+            try {
+                let count = 0;
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    const check = window.VALIDATION.validateFile(file, 'image', 4);
+                    if (!check.valid) {
+                        window.UI.showToast("Attachment Rejected", `${file.name}: ${check.message}`, "error");
+                        continue;
+                    }
+                    if (progressBar) {
+                        progressBar.style.width = `${Math.round(((i + 1) / files.length) * 90)}%`;
+                    }
+                    const compressed = await window.VALIDATION.compressImage(file);
+                    if (compressed) {
+                        selectedImagesList.push(compressed);
+                        count++;
+                    }
+                }
+
+                if (progressBar) progressBar.style.width = '100%';
+
+                setTimeout(() => {
+                    if (progressContainer) progressContainer.classList.remove('active');
+                    statusLabel.textContent = `✓ Loaded ${count} images successfully`;
+                    
+                    if (previewContainer) {
+                        previewContainer.classList.add('active');
+                        const img = previewContainer.querySelector('img');
+                        if (img && selectedImagesList.length > 0) {
+                            img.src = selectedImagesList[0];
+                        }
+                    }
+                    onProcessedCallback(selectedImagesList);
+                }, 400);
+
+            } catch (err) {
+                console.error(err);
+                if (progressContainer) progressContainer.classList.remove('active');
+                statusLabel.textContent = "Error loading images";
+                window.UI.showToast("Upload Error", "Failed to process images.", "error");
+                onProcessedCallback([]);
+            }
+        };
+
         const processFile = async (file) => {
-            const maxMb = type === 'image' ? 4 : 15;
+            const maxMb = 15;
             const check = window.VALIDATION.validateFile(file, type, maxMb);
             
             if (!check.valid) {
-                this.showToast("Attachment Rejected", check.message, "error");
+                window.UI.showToast("Attachment Rejected", check.message, "error");
                 fileInput.value = '';
                 return;
             }
@@ -173,14 +239,8 @@ window.UI = {
             statusLabel.textContent = `Preparing ${file.name}...`;
 
             try {
-                let resultData = null;
-                if (type === 'image') {
-                    if (progressBar) progressBar.style.width = '50%';
-                    resultData = await window.VALIDATION.compressImage(file);
-                } else {
-                    if (progressBar) progressBar.style.width = '50%';
-                    resultData = await window.VALIDATION.fileToBase64(file);
-                }
+                if (progressBar) progressBar.style.width = '50%';
+                const resultData = await window.VALIDATION.fileToBase64(file);
 
                 if (progressBar) progressBar.style.width = '100%';
                 
@@ -190,11 +250,8 @@ window.UI = {
                     
                     if (previewContainer) {
                         previewContainer.classList.add('active');
-                        const img = previewContainer.querySelector('img');
                         const vid = previewContainer.querySelector('video');
-                        if (type === 'image' && img) {
-                            img.src = resultData;
-                        } else if (type === 'video' && vid) {
+                        if (vid) {
                             vid.src = resultData;
                         }
                     }
@@ -205,14 +262,14 @@ window.UI = {
                 console.error(err);
                 if (progressContainer) progressContainer.classList.remove('active');
                 statusLabel.textContent = "Error loading file";
-                this.showToast("Upload Error", "Failed to process file.", "error");
+                window.UI.showToast("Upload Error", "Failed to process file.", "error");
                 onProcessedCallback(null);
             }
         };
     },
 
     resetFormFiles() {
-        selectedImageBase64 = null;
+        selectedImagesList = [];
         selectedVideoBase64 = null;
         
         ['image-dropzone', 'video-dropzone'].forEach(id => {
@@ -429,12 +486,62 @@ window.UI = {
         document.getElementById('detail-classification').textContent = `📂 ${item.classification}`;
 
         const img = document.getElementById('detail-image');
-        if (item.image_data) {
-            img.src = item.image_data;
-            img.style.display = 'block';
+        const images = item.image_list || (item.image_data ? [item.image_data] : []);
+        const carouselContainer = document.getElementById('detail-carousel-container') || img?.parentNode;
+
+        if (images.length > 0 && carouselContainer) {
+            if (img) img.style.display = 'none';
+            
+            let carouselDiv = document.getElementById('modal-carousel-inner-box');
+            if (!carouselDiv) {
+                carouselDiv = document.createElement('div');
+                carouselDiv.id = 'modal-carousel-inner-box';
+                carouselContainer.appendChild(carouselDiv);
+            }
+            carouselDiv.style.display = 'block';
+
+            let activeIdx = 0;
+            const renderCarousel = () => {
+                carouselDiv.innerHTML = `
+                    <div class="carousel-wrapper" style="position:relative; width:100%; height:240px; overflow:hidden; border-radius:var(--radius-md); border:1px solid var(--glass-border); margin: 15px 0;">
+                        <img src="${images[activeIdx]}" style="width:100%; height:100%; object-fit:cover; transition: opacity var(--transition-fast);" />
+                        ${images.length > 1 ? `
+                            <button class="carousel-btn prev" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:32px; height:32px; cursor:pointer; font-size:18px; line-height:30px; text-align:center;">‹</button>
+                            <button class="carousel-btn next" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:32px; height:32px; cursor:pointer; font-size:18px; line-height:30px; text-align:center;">›</button>
+                            <div class="carousel-dots" style="position:absolute; bottom:10px; left:50%; transform:translateX(-50%); display:flex; gap:6px;">
+                                ${images.map((_, idx) => `<span style="width:8px; height:8px; border-radius:50%; background:${idx === activeIdx ? 'var(--primary)' : 'rgba(255,255,255,0.5)'};"></span>`).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                const prevBtn = carouselDiv.querySelector('.carousel-btn.prev');
+                const nextBtn = carouselDiv.querySelector('.carousel-btn.next');
+                if (prevBtn) {
+                    prevBtn.onclick = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        activeIdx = (activeIdx - 1 + images.length) % images.length;
+                        renderCarousel();
+                    };
+                }
+                if (nextBtn) {
+                    nextBtn.onclick = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        activeIdx = (activeIdx + 1) % images.length;
+                        renderCarousel();
+                    };
+                }
+            };
+            renderCarousel();
         } else {
-            img.style.display = 'none';
-            img.src = '';
+            if (img) {
+                img.style.display = 'none';
+                img.src = '';
+            }
+            const carouselDiv = document.getElementById('modal-carousel-inner-box');
+            if (carouselDiv) carouselDiv.style.display = 'none';
         }
 
         const vid = document.getElementById('detail-video');

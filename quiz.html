@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SatyaSetu - SDG 16 Integrity Quiz</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    <link rel="apple-touch-icon" href="logo.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <link rel="stylesheet" href="styles.css">
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        .quiz-container {
+            max-width: 750px;
+            margin: 20px auto;
+        }
+
+        .progress-indicator-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-full);
+            margin: 16px 0 28px 0;
+            overflow: hidden;
+        }
+
+        .progress-indicator-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--neon-indigo), var(--neon-cyan));
+            transition: width 0.4s ease;
+        }
+
+        .score-row {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 24px;
+        }
+
+        .score-item {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .score-val {
+            color: var(--neon-cyan);
+            font-size: 16px;
+            margin-left: 6px;
+        }
+
+        .quiz-card {
+            padding: 36px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 24px;
+        }
+
+        .option-btn {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            padding: 16px 20px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            text-align: left;
+            font-size: 13px;
+            line-height: 1.6;
+            transition: all var(--transition-fast);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            font-family: inherit;
+        }
+
+        .option-btn:hover {
+            background: rgba(99, 102, 241, 0.08);
+            border-color: rgba(var(--primary-rgb), 0.35);
+            transform: translateX(6px);
+        }
+
+        .option-btn.selected {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+        }
+
+        .feedback-box {
+            background: rgba(255, 255, 255, 0.02);
+            border-left: 4px solid var(--primary);
+            padding: 16px 20px;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            font-size: 12px;
+            line-height: 1.6;
+            margin-top: 20px;
+            display: none;
+            animation: fadeInUp 0.4s ease;
+        }
+
+        .feedback-box.success {
+            border-left-color: var(--accent-green);
+            background: rgba(52, 211, 153, 0.04);
+        }
+
+        .feedback-box.danger {
+            border-left-color: var(--accent-red);
+            background: rgba(248, 113, 113, 0.04);
+        }
+    </style>
+</head>
+<body id="page-quiz">
+
+    <div id="toast-container" class="toast-overlay"></div>
+
+    <header>
+        <div class="max-width-container header-content">
+            <a href="index.html" class="brand">
+                <span data-translate="brand">SatyaSetu</span>
+                <span class="sdg-badge">SDG 16</span>
+            </a>
+
+                                    <nav class="desktop-nav">
+                <a href="index.html" class="nav-link" data-translate="home">Home</a>
+                <a href="report.html" class="nav-link" data-translate="register">Register Complaint</a>
+                <a href="about.html" class="nav-link">About</a>
+                <div class="nav-dropdown active">
+                    <button class="nav-dropdown-btn">Explore <i data-lucide="chevron-down" style="width:12px; height:12px; margin-left:4px; display:inline-block; vertical-align:middle;"></i></button>
+                    <div class="nav-dropdown-content">
+                        <a href="dashboard.html" class="" data-translate="dashboard">Reports Hub</a>
+                        <a href="map.html" class="">Interactive Map</a>
+                        <a href="quiz.html" class="active">Integrity Quiz</a>
+                        <a href="analytics.html" class="">Analytics</a>
+                        <a href="complaints.html" class="">All Complaints</a>
+                        <a href="privacy.html" class="" data-translate="safety">Privacy & Safety</a>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="header-actions">
+                <button class="action-btn" id="lang-toggle-btn" title="Toggle Language">हिन्दी</button>
+                <button class="action-btn" id="theme-toggle-btn" title="Toggle Theme" aria-label="Toggle theme">
+                    <i data-lucide="sun"></i>
+                </button>
+                <button class="action-btn" id="reset-demo-btn" title="Reset Sandbox Backups" data-translate="reset_demo" style="width:auto; padding:0 12px; font-size:11px; font-weight:700;">
+                    Reset Demo
+                </button>
+                <button class="action-btn mobile-nav-toggle" id="mobile-menu-btn" onclick="document.getElementById('mobile-nav-dropdown').classList.toggle('active')" aria-label="Toggle mobile menu">
+                    <i data-lucide="menu"></i>
+                </button>
+            </div>
+        </div>
+        
+                        <div id="mobile-nav-dropdown" class="glass-panel mobile-dropdown">
+            <a href="index.html" class="nav-link" data-translate="home">Home</a>
+            <a href="report.html" class="nav-link" data-translate="register">Register Complaint</a>
+            <a href="dashboard.html" class="nav-link" data-translate="dashboard">Reports Hub</a>
+            <a href="map.html" class="nav-link">Interactive Map</a>
+            <a href="quiz.html" class="nav-link active">Integrity Quiz</a>
+            <a href="analytics.html" class="nav-link">Analytics</a>
+            <a href="complaints.html" class="nav-link">All Complaints</a>
+            <a href="about.html" class="nav-link">About</a>
+            <a href="privacy.html" class="nav-link" data-translate="safety">Privacy & Safety</a>
+            <a href="settings.html" class="nav-link">Settings</a>
+        </div>
+    </header>
+
+    <main class="max-width-container">
+        <div class="quiz-container">
+            
+            <div style="margin: 20px 0;">
+                <h2 style="font-size:28px; font-weight:900;">🎓 SDG-16 Integrity & Scenario Game</h2>
+                <p style="color:var(--text-muted); font-size:13px; margin-top:4px;">Test your knowledge of civil rights, public accountability, and transparency scenarios.</p>
+            </div>
+
+            <div class="score-row">
+                <div class="score-item">🛡️ Integrity Level: <span class="score-val" id="integrity-points">0 / 50</span></div>
+                <div class="score-item">🤝 Public Trust Index: <span class="score-val" id="trust-points">100%</span></div>
+            </div>
+
+            <div class="progress-indicator-container">
+                <div class="progress-indicator-bar" id="progress-bar"></div>
+            </div>
+
+            <!-- Quiz Play Card -->
+            <div class="glass-panel quiz-card fade-in-el" id="quiz-card-box">
+                <span id="question-index" style="color:var(--primary); font-size:11px; font-weight:900; letter-spacing:1px; text-transform:uppercase;">Scenario 1 of 5</span>
+                <h3 id="question-text" style="font-size:18px; font-weight:800; margin:10px 0 20px 0; line-height:1.4;">Loading Scenario...</h3>
+
+                <div id="options-container" style="display:flex; flex-direction:column;">
+                    <!-- Option Buttons -->
+                </div>
+
+                <div class="feedback-box" id="feedback-box">
+                    <strong id="feedback-title" style="display:block; margin-bottom:4px; font-size:13px;">Feedback Title</strong>
+                    <p id="feedback-desc">Feedback details...</p>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; margin-top:24px;">
+                    <button class="btn btn-primary" id="next-btn" style="padding:10px 24px; font-size:13px;" disabled>Next Scenario</button>
+                </div>
+            </div>
+
+            <!-- Quiz Completed screen (hidden by default) -->
+            <div class="glass-panel quiz-card fade-in-el" id="quiz-complete-box" style="display:none; text-align:center; padding:48px;">
+                <span style="font-size:56px; display:block; margin-bottom:16px;">🏆</span>
+                <h3 style="font-size:24px; font-weight:900; margin-bottom:8px;">Evaluation Completed!</h3>
+                <p id="evaluation-title" style="color:var(--primary); font-weight:800; text-transform:uppercase; font-size:13px; letter-spacing:1px; margin-bottom:16px;">INTEGRITY AMBASSADOR</p>
+                
+                <p style="color:var(--text-muted); font-size:13px; max-width:500px; margin:0 auto 24px auto; line-height:1.6;" id="evaluation-desc">
+                    Your choices reflect a strong grasp of civic transparency and ethical accountability guidelines.
+                </p>
+
+                <div class="score-row" style="max-width:350px; margin:0 auto 28px auto;">
+                    <div style="font-size:12px;">Final Integrity: <strong style="color:var(--neon-cyan); font-size:14px;" id="final-integrity">50/50</strong></div>
+                    <div style="font-size:12px;">Final Trust: <strong style="color:var(--neon-purple); font-size:14px;" id="final-trust">100%</strong></div>
+                </div>
+
+                <button class="btn btn-primary" onclick="resetQuizGame()" style="margin:0 auto; padding:12px 28px;">Play Again</button>
+            </div>
+
+        </div>
+    </main>
+
+    <footer>
+        <div class="max-width-container">
+            <p>SatyaSetu Civic Transparency Network — Made in alignment with SDG Goal 16.</p>
+        </div>
+    </footer>
+
+    <!-- Firebase Compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <!-- Project Modules -->
+    <script src="config.js"></script>
+    <script src="utils.js"></script>
+    <script src="validation.js"></script>
+    <script src="ai.js"></script>
+    <script src="firebase.js"></script>
+    <script src="ui.js"></script>
+    <script src="app.js"></script>
+
+    <script>
+        const SCENARIOS = [
+            {
+                question: "You are registering a complaint regarding local canal lining negligence. A local broker approaches you and offers to repair your street if you delete the complaint details. What do you do?",
+                options: [
+                    { text: "Accept the broker's deal; getting the local street repaired is a faster practical solution.", score: 0, trustChange: -30, correct: false, feedbackTitle: "❌ Compromised Transparency", feedbackText: "Accepting backroom deals compromises civic transparency and enables broader infrastructure embezzlement." },
+                    { text: "Refuse the broker's offer, log the negotiation details as additional evidence in the portal.", score: 10, trustChange: 0, correct: true, feedbackTitle: "✓ Correct Integrity Action", feedbackText: "Refusing bribery and logging the attempts creates an audit log that protects public resources." }
+                ]
+            },
+            {
+                question: "An administrative department officer refuses to issue a public certificate unless you pay a 'processing fee' of 500 INR, without giving any official receipt. What is your response?",
+                options: [
+                    { text: "Pay the fee immediately to avoid delays and receive your certificate.", score: 0, trustChange: -20, correct: false, feedbackTitle: "❌ Unofficial Bribery Accepted", feedbackText: "Paying un-receipted fees feeds institutional corruption and violates citizen rights." },
+                    { text: "Refuse the payment, demand to see the official schedule of government charges, and log the officer's details.", score: 10, trustChange: 0, correct: true, feedbackTitle: "✓ Integrity Maintained", feedbackText: "Demanding official schedules and refusing bribes halts corruption. Under SDG 16, access to public services must be fair and transparent." }
+                ]
+            },
+            {
+                question: "You have verified evidence of a public road project being billed in full, but the pavement is completely broken and unfinished. Which is the most effective way to report this?",
+                options: [
+                    { text: "Post angry complaints on general social media with the contractor's personal address.", score: 0, trustChange: -10, correct: false, feedbackTitle: "❌ Personal Leakage & Safety Hazard", feedbackText: "Leaking addresses violates PII safety standards. Doxxing reduces the credibility of your claim." },
+                    { text: "Compile structured details, attach proof photographs, and submit the report to a secure monitoring portal.", score: 10, trustChange: 0, correct: true, feedbackTitle: "✓ Structured Auditing", feedbackText: "Structured complaints supported by verified proof ensure credible and legal administrative reviews." }
+                ]
+            },
+            {
+                question: "You want to file a complaint about unfair practices in a local court, but you are afraid of personal retaliation. What security shields does SatyaSetu provide?",
+                options: [
+                    { text: "Wait for someone else to log it; citizen actions have no impact.", score: 0, trustChange: -10, correct: false, feedbackTitle: "❌ Inaction", feedbackText: "Citizen silence allows corruption to grow unchecked." },
+                    { text: "Use SatyaSetu's Zero-PII Shield, ensuring no personal phone numbers, names, or addresses are logged in the database.", score: 10, trustChange: 0, correct: true, feedbackTitle: "✓ Privacy Shield Utilized", feedbackText: "SatyaSetu's Zero Phishing / Zero PII policy enables reporting systemic concerns without exposing private identification details." }
+                ]
+            },
+            {
+                question: "During an administrative audit of a village water well funding, you discover that the figures in the village report do not match the physical well's depth. What is the auditor's duty?",
+                options: [
+                    { text: "Ignore the difference to avoid conflict with local village leaders.", score: 0, trustChange: -40, correct: false, feedbackTitle: "❌ Negligence of Audit Duties", feedbackText: "Audit silence compromises public safety and allows embezzlement of water resource budgets." },
+                    { text: "Flag the discrepancy, run a Jaccard overlap audit on resource receipts, and request a physical investigation.", score: 10, trustChange: 0, correct: true, feedbackTitle: "✓ Active Integrity Audit", feedbackText: "Flagging document discrepancies protects local resources and ensures that village leaders remain accountable for public funds." }
+                ]
+            }
+        ];
+
+        let currentScenarioIdx = 0;
+        let integrityPoints = 0;
+        let trustIndex = 100;
+        let selectedOptionIdx = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            loadScenario();
+
+            document.getElementById('next-btn').onclick = (e) => {
+                e.preventDefault();
+                processNextStep();
+            };
+        });
+
+        function loadScenario() {
+            const cardBox = document.getElementById('quiz-card-box');
+            const completeBox = document.getElementById('quiz-complete-box');
+            
+            cardBox.style.display = 'block';
+            completeBox.style.display = 'none';
+
+            const scenario = SCENARIOS[currentScenarioIdx];
+            document.getElementById('question-index').textContent = `Scenario ${currentScenarioIdx + 1} of ${SCENARIOS.length}`;
+            document.getElementById('question-text').textContent = scenario.question;
+
+            const optionsBox = document.getElementById('options-container');
+            optionsBox.innerHTML = '';
+            
+            const feedbackBox = document.getElementById('feedback-box');
+            feedbackBox.style.display = 'none';
+
+            document.getElementById('next-btn').disabled = true;
+            selectedOptionIdx = null;
+
+            scenario.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `<span style="font-weight:900;">${idx === 0 ? 'A' : 'B'}.</span> ${window.UTILS.escapeHtml(opt.text)}`;
+                
+                btn.onclick = () => {
+                    if (selectedOptionIdx !== null) return; // Prevent double select
+                    
+                    selectedOptionIdx = idx;
+                    btn.classList.add('selected');
+                    revealFeedback(opt);
+                };
+                optionsBox.appendChild(btn);
+            });
+
+            // Update Progress Bar
+            const bar = document.getElementById('progress-bar');
+            bar.style.width = `${(currentScenarioIdx / SCENARIOS.length) * 100}%`;
+        }
+
+        function revealFeedback(option) {
+            const feedbackBox = document.getElementById('feedback-box');
+            const title = document.getElementById('feedback-title');
+            const desc = document.getElementById('feedback-desc');
+
+            feedbackBox.className = `feedback-box ${option.correct ? 'success' : 'danger'}`;
+            title.textContent = option.feedbackTitle;
+            desc.textContent = option.feedbackText;
+            feedbackBox.style.display = 'block';
+
+            // Accumulate Points
+            integrityPoints += option.score;
+            trustIndex = Math.max(10, trustIndex + option.trustChange);
+
+            // Bind values
+            document.getElementById('integrity-points').textContent = `${integrityPoints} / 50`;
+            document.getElementById('trust-points').textContent = `${trustIndex}%`;
+
+            document.getElementById('next-btn').disabled = false;
+        }
+
+        function processNextStep() {
+            currentScenarioIdx++;
+            if (currentScenarioIdx < SCENARIOS.length) {
+                loadScenario();
+            } else {
+                showQuizCompleted();
+            }
+        }
+
+        function showQuizCompleted() {
+            const cardBox = document.getElementById('quiz-card-box');
+            const completeBox = document.getElementById('quiz-complete-box');
+            const bar = document.getElementById('progress-bar');
+            
+            cardBox.style.display = 'none';
+            completeBox.style.display = 'block';
+            bar.style.width = '100%';
+
+            document.getElementById('final-integrity').textContent = `${integrityPoints} / 50`;
+            document.getElementById('final-trust').textContent = `${trustIndex}%`;
+
+            const evalTitle = document.getElementById('evaluation-title');
+            const evalDesc = document.getElementById('evaluation-desc');
+
+            if (integrityPoints >= 40 && trustIndex >= 90) {
+                evalTitle.textContent = "🏆 Integrity Ambassador";
+                evalTitle.style.color = "var(--accent-green)";
+                evalDesc.textContent = "Outstanding! Your decisions represent clean alignment with SDG-16 guidelines. You protect public infrastructure and resist all levels of corruption.";
+            } else if (integrityPoints >= 30) {
+                evalTitle.textContent = "⚖️ Accountability Advocate";
+                evalTitle.style.color = "var(--neon-cyan)";
+                evalDesc.textContent = "Great job! You recognize typical public sector concerns and understand standard reporting safety protocols. Avoid compromising deals to maintain high transparency.";
+            } else {
+                evalTitle.textContent = "💡 Transparency Trainee";
+                evalTitle.style.color = "var(--accent-yellow)";
+                evalDesc.textContent = "Good effort! Take time to read through the SatyaSetu Privacy Charter to understand how structured reporting blocks administrative negligence and corruption.";
+            }
+        }
+
+        function resetQuizGame() {
+            currentScenarioIdx = 0;
+            integrityPoints = 0;
+            trustIndex = 100;
+            
+            document.getElementById('integrity-points').textContent = `0 / 50`;
+            document.getElementById('trust-points').textContent = `100%`;
+
+            loadScenario();
+        }
+    </script>
+</body>
+</html>

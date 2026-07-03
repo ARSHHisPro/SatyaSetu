@@ -7,7 +7,7 @@
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#6366f1">
-    <link class="apple-touch-icon" href="https://i.ibb.co/b55QTmGR/logo.png">
+    <link class="apple-touch-icon" href="logo.png">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,15 +28,21 @@
                 <span class="sdg-badge">SDG 16</span>
             </a>
 
-            <nav class="desktop-nav">
+                                    <nav class="desktop-nav">
                 <a href="index.html" class="nav-link" data-translate="home">Home</a>
                 <a href="report.html" class="nav-link" data-translate="register">Register Complaint</a>
-                <a href="dashboard.html" class="nav-link" data-translate="dashboard">Reports Hub</a>
-                <a href="analytics.html" class="nav-link">Analytics</a>
-                <a href="complaints.html" class="nav-link">All Complaints</a>
                 <a href="about.html" class="nav-link active">About</a>
-                <a href="privacy.html" class="nav-link" data-translate="safety">Privacy & Safety</a>
-                <a href="settings.html" class="nav-link"><i data-lucide="settings" style="width:16px; height:16px;"></i></a>
+                <div class="nav-dropdown">
+                    <button class="nav-dropdown-btn">Explore <i data-lucide="chevron-down" style="width:12px; height:12px; margin-left:4px; display:inline-block; vertical-align:middle;"></i></button>
+                    <div class="nav-dropdown-content">
+                        <a href="dashboard.html" class="" data-translate="dashboard">Reports Hub</a>
+                        <a href="map.html" class="">Interactive Map</a>
+                        <a href="quiz.html" class="">Integrity Quiz</a>
+                        <a href="analytics.html" class="">Analytics</a>
+                        <a href="complaints.html" class="">All Complaints</a>
+                        <a href="privacy.html" class="" data-translate="safety">Privacy & Safety</a>
+                    </div>
+                </div>
             </nav>
 
             <div class="header-actions">
@@ -53,10 +59,12 @@
             </div>
         </div>
         
-        <div id="mobile-nav-dropdown" class="glass-panel mobile-dropdown">
+                        <div id="mobile-nav-dropdown" class="glass-panel mobile-dropdown">
             <a href="index.html" class="nav-link" data-translate="home">Home</a>
             <a href="report.html" class="nav-link" data-translate="register">Register Complaint</a>
             <a href="dashboard.html" class="nav-link" data-translate="dashboard">Reports Hub</a>
+            <a href="map.html" class="nav-link">Interactive Map</a>
+            <a href="quiz.html" class="nav-link">Integrity Quiz</a>
             <a href="analytics.html" class="nav-link">Analytics</a>
             <a href="complaints.html" class="nav-link">All Complaints</a>
             <a href="about.html" class="nav-link active">About</a>
@@ -96,16 +104,7 @@
                         <p>Built with vanilla standard HTML5, CSS3 styling variables, vanilla JavaScript global scopes, Firebase compatibility libraries, Chart.js, Lucide Icons, and ElevenLabs conversational voice assistants.</p>
                     </div>
 
-                    <div style="background:rgba(99, 102, 241, 0.04); border:1px solid var(--glass-border); padding:24px; border-radius:var(--radius-md);">
-                        <h3 style="color:var(--text-main); font-size:16px; font-weight:800; margin-bottom:12px;">Development Team Credits</h3>
-                        <p style="font-size:13px; margin-bottom:8px;">This project has been compiled and designed by:</p>
-                        <ul style="list-style-type:circle; padding-left:20px; font-size:12px; display:flex; flex-direction:column; gap:6px;">
-                            <li><strong>Arshit</strong> — Lead Engineer & Firebase Integrations</li>
-                            <li><strong>Arjun</strong> — Frontend Designer & Styles Coordinator</li>
-                            <li><strong>Madhavi</strong> — AI Engine & Quality Auditor</li>
-                            <li><strong>Prabhnoor</strong> — Offline Systems & PWA Specialist</li>
-                        </ul>
-                    </div>
+
                 </div>
             </div>
             
@@ -115,7 +114,7 @@
     <footer>
         <div class="max-width-container">
             <p style="margin-bottom:4px;">SatyaSetu Civic Transparency Network — Made in alignment with SDG Goal 16.</p>
-            <p style="font-size:11px; color:var(--text-muted);">Development team: Arshit, Arjun, Madhavi and Prabhnoor</p>
+            
         </div>
     </footer>
 
