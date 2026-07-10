@@ -1,6 +1,6 @@
 // SatyaSetu - Service Worker (service-worker.js) for Offline capabilities (Flat Root Multi-page version)
 
-const CACHE_NAME = 'satyasetu-v9-cache';
+const CACHE_NAME = 'satyasetu-v11-cache';
 const ASSETS = [
     '/',
     '/index.html',
@@ -10,6 +10,7 @@ const ASSETS = [
     '/analytics.html',
     '/map.html',
     '/quiz.html',
+    '/contact.html',
     '/complaints.html',
     '/complaint.html',
     '/about.html',

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SatyaSetu - Contact Us</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    <link rel="apple-touch-icon" href="logo.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <link rel="stylesheet" href="styles.css">
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 32px;
+            margin: 20px 0 50px 0;
+        }
+
+        .email-info-card {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 36px;
+            justify-content: center;
+        }
+
+        .contact-form-card {
+            padding: 36px;
+        }
+
+        .email-display-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-sm);
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: monospace;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--neon-cyan);
+            word-break: break-all;
+            gap: 12px;
+        }
+
+        .copy-email-btn {
+            background: rgba(34, 211, 238, 0.15);
+            border: 1px solid rgba(34, 211, 238, 0.3);
+            color: var(--neon-cyan);
+            border-radius: var(--radius-sm);
+            padding: 8px 12px;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            flex-shrink: 0;
+        }
+
+        .copy-email-btn:hover {
+            background: var(--neon-cyan);
+            color: #000;
+            box-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .contact-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+        }
+    </style>
+</head>
+<body id="page-contact">
+
+    <!-- SatyaSetu Premium Loading Overlay -->
+    <div id="loading-screen" class="loading-overlay">
+        <div class="loading-content">
+            <img src="logo.png" alt="SatyaSetu Logo" class="loading-logo float-el">
+            <div class="loading-spinner"></div>
+            <span class="loading-text">Securing Connections...</span>
+        </div>
+    </div>
+
+    <div id="toast-container" class="toast-overlay"></div>
+
+    <header>
+        <div class="max-width-container header-content">
+            <a href="index.html" class="brand">
+                <span data-translate="brand">SatyaSetu</span>
+                <span class="sdg-badge">SDG 16</span>
+            </a>
+
+                        <nav class="desktop-nav">
+                <a href="index.html" class="nav-link" data-translate="home">Home</a>
+                <a href="report.html" class="nav-link" data-translate="register">Register Complaint</a>
+                <a href="about.html" class="nav-link">About</a>
+                <div class="nav-dropdown active">
+                    <button class="nav-dropdown-btn">Explore <i data-lucide="chevron-down" style="width:12px; height:12px; margin-left:4px; display:inline-block; vertical-align:middle;"></i></button>
+                    <div class="nav-dropdown-content">
+                        <a href="dashboard.html" class="" data-translate="dashboard">Reports Hub</a>
+                        <a href="map.html" class="">Interactive Map</a>
+                        <a href="quiz.html" class="">Integrity Quiz</a>
+                        <a href="analytics.html" class="">Analytics</a>
+                        <a href="complaints.html" class="">All Complaints</a>
+                        <a href="privacy.html" class="" data-translate="safety">Privacy & Safety</a>
+                        <a href="contact.html" class="active">Contact Us</a>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="header-actions">
+                <button class="action-btn" id="lang-toggle-btn" title="Toggle Language">हिन्दी</button>
+                <button class="action-btn" id="theme-toggle-btn" title="Toggle Theme" aria-label="Toggle theme">
+                    <i data-lucide="sun"></i>
+                </button>
+                <button class="action-btn" id="reset-demo-btn" title="Reset Sandbox Backups" data-translate="reset_demo" style="width:auto; padding:0 12px; font-size:11px; font-weight:700;">
+                    Reset Demo
+                </button>
+                <button class="action-btn mobile-nav-toggle" id="mobile-menu-btn" onclick="document.getElementById('mobile-nav-dropdown').classList.toggle('active')" aria-label="Toggle mobile menu">
+                    <i data-lucide="menu"></i>
+                </button>
+            </div>
+        </div>
+        
+                <div id="mobile-nav-dropdown" class="glass-panel mobile-dropdown">
+            <a href="index.html" class="nav-link" data-translate="home">Home</a>
+            <a href="report.html" class="nav-link" data-translate="register">Register Complaint</a>
+            <a href="dashboard.html" class="nav-link" data-translate="dashboard">Reports Hub</a>
+            <a href="map.html" class="nav-link">Interactive Map</a>
+            <a href="quiz.html" class="nav-link">Integrity Quiz</a>
+            <a href="analytics.html" class="nav-link">Analytics</a>
+            <a href="complaints.html" class="nav-link">All Complaints</a>
+            <a href="about.html" class="nav-link">About</a>
+            <a href="privacy.html" class="nav-link" data-translate="safety">Privacy & Safety</a>
+            <a href="contact.html" class="nav-link active">Contact Us</a>
+            <a href="settings.html" class="nav-link">Settings</a>
+        </div>
+    </header>
+
+    <main class="max-width-container">
+        <section class="fade-in-el" style="margin: 20px 0;">
+            <div style="margin-bottom:16px;">
+                <h2 style="font-size:28px; font-weight:900;">✉️ Contact SatyaSetu Support</h2>
+                <p style="color:var(--text-muted); font-size:13px; margin-top:4px;">Have questions, feedback, or need verification logs? Reach out to our audit officers.</p>
+            </div>
+
+            <div class="contact-grid">
+                <!-- Left Details Card -->
+                <div class="glass-panel email-info-card">
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <h3 style="font-size:20px; font-weight:900;">Direct Communication</h3>
+                        <p style="color:var(--text-muted); font-size:13px; line-height:1.6;">For official inquiries, database access, or academic verification of the SDG-16 Sandbox, contact our support address directly.</p>
+                    </div>
+
+                    <div class="email-display-box">
+                        <span id="email-text">setu.satya2026@gmail.com</span>
+                        <button class="copy-email-btn" id="copy-email-btn">Copy</button>
+                    </div>
+
+                    <div style="display:flex; gap:12px; margin-top:8px;">
+                        <a href="mailto:setu.satya2026@gmail.com" class="btn btn-primary" style="flex-grow:1; text-align:center; padding:12px; font-size:12px; text-decoration:none;">Open Mail Client</a>
+                    </div>
+                </div>
+
+                <!-- Right Contact Form -->
+                <div class="glass-panel contact-form-card">
+                    <h3 style="font-size:18px; font-weight:800; margin-bottom:20px;">Send Feedback / Query</h3>
+                    
+                    <form id="contact-us-form" style="display:flex; flex-direction:column; gap:16px;">
+                        <div class="form-group">
+                            <label for="contact-name">Name (Optional)</label>
+                            <input type="text" id="contact-name" placeholder="Leave blank to submit anonymously" class="input-control">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="contact-email">Email Address *</label>
+                            <input type="email" id="contact-email" placeholder="e.g. citizen@domain.com" class="input-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="contact-message">Your Message / Query *</label>
+                            <textarea id="contact-message" placeholder="Provide suggestion or inquiry details here..." class="input-control" style="min-height:120px;" required></textarea>
+                        </div>
+
+                        <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+                            <button type="submit" class="btn btn-primary" style="padding:10px 24px; font-size:13px;">Send message</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Zero-PII Disclaimer banner -->
+            <div style="background:rgba(239, 68, 68, 0.05); border:1px solid rgba(239, 68, 68, 0.2); padding:16px 24px; border-radius:var(--radius-md); margin-bottom:40px; display:flex; align-items:center; gap:16px;">
+                <span style="font-size:24px;">🛡️</span>
+                <div>
+                    <h4 style="font-weight:800; font-size:13px; color:var(--accent-red); margin-bottom:2px;">Zero PII Integrity Notice</h4>
+                    <p style="font-size:11px; color:var(--text-muted); line-height:1.5;">Do not send sensitive personal parameters (like Aadhaar numbers, login passwords, bank pin numbers, or credit card scans) in inquiry messages. SatyaSetu operates under a strict anti-phishing charter.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="max-width-container">
+            <p>SatyaSetu Civic Transparency Network — Made in alignment with SDG Goal 16.</p>
+        </div>
+    </footer>
+
+    <!-- Firebase Compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <!-- Project Modules -->
+    <script src="config.js"></script>
+    <script src="utils.js"></script>
+    <script src="validation.js"></script>
+    <script src="ai.js"></script>
+    <script src="firebase.js"></script>
+    <script src="ui.js"></script>
+    <script src="app.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+
+            // 1. Copy email functionality
+            const copyBtn = document.getElementById('copy-email-btn');
+            if (copyBtn) {
+                copyBtn.onclick = (e) => {
+                    e.preventDefault();
+                    navigator.clipboard.writeText("setu.satya2026@gmail.com")
+                        .then(() => {
+                            window.UI.showToast("Email Copied", "setu.satya2026@gmail.com copied to clipboard.", "success");
+                        })
+                        .catch(() => {
+                            window.UI.showToast("Copy Failed", "Please manually highlight and copy the email.", "error");
+                        });
+                };
+            }
+
+            // 2. Form Submission with Firebase
+            const form = document.getElementById('contact-us-form');
+            if (form) {
+                form.onsubmit = async (e) => {
+                    e.preventDefault();
+                    
+                    const name = document.getElementById('contact-name').value.trim() || 'Anonymous';
+                    const email = document.getElementById('contact-email').value.trim();
+                    const message = document.getElementById('contact-message').value.trim();
+
+                    const newInquiry = {
+                        name: name,
+                        email: email,
+                        message: message,
+                        created_at: new Date().toISOString()
+                    };
+
+                    // Local storage fallback backup
+                    try {
+                        const inquiries = JSON.parse(localStorage.getItem('satyasetu_inquiries') || '[]');
+                        inquiries.push(newInquiry);
+                        localStorage.setItem('satyasetu_inquiries', JSON.stringify(inquiries));
+                    } catch (err) {
+                        console.error(err);
+                    }
+
+                    // Try Firebase submit if initialized
+                    if (window.FIREBASE && window.FIREBASE.isReady()) {
+                        try {
+                            window.UI.showToast("Syncing Database", "Transmitting feedback to Firestore...", "info");
+                            await window.FIREBASE.submitFeedback(newInquiry);
+                            window.UI.showToast("Message Transmitted", "Your message is synced with our Firebase Realtime database.", "success");
+                        } catch (error) {
+                            console.warn("Firebase sync failed, saved locally instead:", error);
+                            window.UI.showToast("Offline Stored", "Saved locally. Will sync when back online.", "warning");
+                        }
+                    } else {
+                        window.UI.showToast("Offline Stored", "Saved locally to device (Sandbox Mode).", "success");
+                    }
+                    
+                    form.reset();
+                };
+            }
+        });
+    </script>
+</body>
+</html>

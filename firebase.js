@@ -65,6 +65,24 @@ window.FIREBASE = {
             throw err;
         }
     },
+ 
+    async submitFeedback(payload) {
+        if (!db) throw new Error("Database service is offline.");
+
+        try {
+            const feedbacksCollection = db.collection('artifacts').doc(window.CONFIG.APP_ID).collection('public').doc('data').collection('feedbacks');
+            const docId = feedbacksCollection.doc().id;
+            await feedbacksCollection.doc(docId).set({
+                ...payload,
+                id: docId,
+                created_at: new Date().toISOString()
+            });
+            return { success: true, id: docId };
+        } catch (err) {
+            console.error("Firestore Feedback Write Error:", err);
+            throw err;
+        }
+    },
 
     subscribeToComplaints(onUpdateCallback, onErrorCallback) {
         if (!db) {
