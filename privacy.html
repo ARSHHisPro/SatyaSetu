@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -99,7 +99,7 @@
 
                     <div>
                         <h3 style="color:var(--text-main); font-size:16px; font-weight:800; margin-bottom:6px;">💾 2. Where Your Report Goes</h3>
-                        <p style="font-size:13px;">When this app is connected to its project database (Cloud Firestore), your submission is saved securely so the whole team/class can review the shared dashboard. If that connection is unavailable, the report is saved only on your device as a fallback.</p>
+                        <p style="font-size:13px;">When this app is connected to its project database (Cloud Cloud), your submission is saved securely so the whole team/class can review the shared dashboard. If that connection is unavailable, the report is saved only on your device as a fallback.</p>
                     </div>
 
                     <div>
@@ -138,17 +138,17 @@
         </div>
     </footer>
 
-    <!-- Firebase Compat SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <!-- Secure Cloud Storage Protocol SDKs -->
+    <script src="libs/cloud-core.js"></script>
+    <script src="libs/cloud-auth.js"></script>
+    <script src="libs/cloud-db.js"></script>
 
     <!-- Custom Scripts -->
     <script src="config.js"></script>
     <script src="utils.js"></script>
     <script src="validation.js"></script>
     <script src="ai.js"></script>
-    <script src="firebase.js"></script>
+    <script src="cloud.js"></script>
     <script src="charts.js"></script>
     <script src="ui.js"></script>
     <script src="app.js"></script>

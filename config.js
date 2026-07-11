@@ -1,4 +1,4 @@
-// Satyasetu - App Configurations (Global Namespace)
+﻿// Satyasetu - App Configurations (Global Namespace)
 
 window.CONFIG = {
     APP_ID: "satyasetu-prod",
@@ -10,7 +10,7 @@ window.CONFIG = {
     MAX_VIDEO_SIZE_MB: 15,
     SUBMISSION_RATE_LIMIT_MS: 30000,
 
-    FIREBASE_CONFIG: {
+    CLOUD_CONFIG: {
         apiKey: "AIzaSyBGVlsu_dm8Pdr2GiBroBUIWLB3NTggR0Q",
         authDomain: "satyasetu-9be45.firebaseapp.com",
         projectId: "satyasetu-9be45",

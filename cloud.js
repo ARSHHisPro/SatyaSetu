@@ -1,0 +1,167 @@
+// Satyasetu - Cloud Integration with Offline Persistence Cache (Global compat script version)
+
+let db = null;
+let auth = null;
+let isInitialized = false;
+
+window.CLOUD = {
+    async init(onAuthChangeCallback) {
+        if (isInitialized) return { success: true, db, auth };
+
+        try {
+            if (typeof firebase === 'undefined') {
+                throw new Error("Cloud SDK libraries not loaded.");
+            }
+
+            const app = firebase.initializeApp(window.CONFIG.CLOUD_CONFIG);
+            db = firebase.firestore(app);
+
+            try {
+                await db.enablePersistence({ synchronizeTabs: true });
+                console.log("Cloud offline buffer cache activated.");
+            } catch (err) {
+                if (err.code == 'failed-precondition') {
+                    console.warn("Multiple tabs open, persistence enabled in first tab only.");
+                } else if (err.code == 'unimplemented') {
+                    console.warn("The current browser does not support offline persistence.");
+                }
+            }
+
+            auth = firebase.auth(app);
+
+            if (onAuthChangeCallback) {
+                auth.onAuthStateChanged((user) => {
+                    onAuthChangeCallback(user);
+                });
+            }
+
+            await auth.signInAnonymously();
+            
+            isInitialized = true;
+            console.log("Secure cloud synchronization protocol established.");
+            return { success: true, db, auth };
+            
+        } catch (err) {
+            console.error("Cloud initialization failure:", err);
+            isInitialized = false;
+            return { success: false, error: err };
+        }
+    },
+
+    async submitComplaint(payload) {
+        if (!db) throw new Error("Database service is offline.");
+
+        try {
+            const complaintsCollection = db.collection('artifacts').doc(window.CONFIG.APP_ID).collection('public').doc('data').collection('complaints');
+            const docId = payload.id || complaintsCollection.doc().id;
+            await complaintsCollection.doc(docId).set({
+                ...payload,
+                id: docId,
+                updated_at: new Date().toISOString()
+            }, { merge: true });
+            return { success: true, id: docId };
+        } catch (err) {
+            console.error("Cloud database write error:", err);
+            throw err;
+        }
+    },
+ 
+    async submitFeedback(payload) {
+        if (!db) throw new Error("Database service is offline.");
+
+        try {
+            const feedbacksCollection = db.collection('artifacts').doc(window.CONFIG.APP_ID).collection('public').doc('data').collection('feedbacks');
+            const docId = feedbacksCollection.doc().id;
+            await feedbacksCollection.doc(docId).set({
+                ...payload,
+                id: docId,
+                created_at: new Date().toISOString()
+            });
+            return { success: true, id: docId };
+        } catch (err) {
+            console.error("Cloud feedback write error:", err);
+            throw err;
+        }
+    },
+
+    subscribeToComplaints(onUpdateCallback, onErrorCallback) {
+        if (!db) {
+            if (onErrorCallback) onErrorCallback(new Error("Database offline"));
+            return null;
+        }
+
+        try {
+            const complaintsCollection = db.collection('artifacts').doc(window.CONFIG.APP_ID).collection('public').doc('data').collection('complaints');
+            
+            return complaintsCollection.onSnapshot((snapshot) => {
+                const list = [];
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data() || {};
+                    list.push({
+                        ...data,
+                        id: data.id || docSnap.id,
+                        _firestore_id: docSnap.id
+                    });
+                });
+                
+                list.sort((a, b) => {
+                    const timeA = new Date(a.created_at || 0).getTime();
+                    const timeB = new Date(b.created_at || 0).getTime();
+                    return timeB - timeA;
+                });
+
+                onUpdateCallback(list);
+            }, (error) => {
+                console.error("Cloud subscription sync error:", error);
+                if (onErrorCallback) onErrorCallback(error);
+            });
+        } catch (err) {
+            console.error("Cloud setup sync error:", err);
+            if (onErrorCallback) onErrorCallback(err);
+            return null;
+        }
+    },
+
+    async deleteComplaint(docId) {
+        if (!db) throw new Error("Database service is offline.");
+
+        try {
+            const docRef = db.collection('artifacts').doc(window.CONFIG.APP_ID).collection('public').doc('data').collection('complaints').doc(docId);
+            await docRef.delete();
+            return { success: true };
+        } catch (err) {
+            console.error("Cloud database document deletion failure:", err);
+            throw err;
+        }
+    },
+
+    async getAdminPassword() {
+        if (!db) return null;
+        try {
+            const docRef = db.collection('artifacts').doc(window.CONFIG.APP_ID).collection('public').doc('config');
+            const doc = await docRef.get();
+            if (doc.exists) {
+                return doc.data().admin_password || null;
+            }
+        } catch (err) {
+            console.warn("Could not read admin credentials from cloud:", err);
+        }
+        return null;
+    },
+
+    async setAdminPassword(newPassword) {
+        if (!db) throw new Error("Database service is offline.");
+        try {
+            const docRef = db.collection('artifacts').doc(window.CONFIG.APP_ID).collection('public').doc('config');
+            await docRef.set({ admin_password: newPassword }, { merge: true });
+            return true;
+        } catch (err) {
+            console.error("Cloud password update error:", err);
+            throw err;
+        }
+    },
+
+    isReady() {
+        return isInitialized && db !== null && auth !== null && auth.currentUser !== null;
+    }
+};

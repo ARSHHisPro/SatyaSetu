@@ -1,0 +1,92 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SatyaSetu - System Control</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .control-panel {
+            max-width: 500px;
+            margin: 100px auto;
+            padding: 40px;
+            text-align: center;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 12px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 24px;
+            letter-spacing: 1px;
+        }
+        .status-badge.active {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--neon-rose);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .status-badge.inactive {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--neon-emerald);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .control-btn {
+            width: 100%;
+            padding: 16px;
+            font-size: 14px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body class="page-control">
+    <main class="max-width-container">
+        <div class="glass-panel control-panel anim-scale-up">
+            <h2 style="font-size:24px; font-weight:900; margin-bottom:12px;">🛡️ SDG-16 Maintenance Console</h2>
+            <p style="color:var(--text-muted); font-size:13px; line-height:1.6; margin-bottom:24px;">
+                Toggle global system maintenance status. When activated, all consumer portal pages are locked under administrative lockdown.
+            </p>
+            
+            <div id="maintenance-status" class="status-badge inactive">System Status: Active</div>
+            
+            <button id="toggle-maintenance-btn" class="btn btn-primary control-btn">Enable Lockdown</button>
+            <a href="index.html" class="btn btn-secondary control-btn" style="text-decoration:none; display:block; text-align:center; box-sizing:border-box;">Exit to Portal</a>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const statusBadge = document.getElementById('maintenance-status');
+            const toggleBtn = document.getElementById('toggle-maintenance-btn');
+
+            function updateUI() {
+                const isMaintenance = localStorage.getItem('satyasetu_maintenance_mode') === 'true';
+                if (isMaintenance) {
+                    statusBadge.textContent = 'System Status: Lockdown (Maintenance)';
+                    statusBadge.className = 'status-badge active';
+                    toggleBtn.textContent = 'Disable Lockdown';
+                    toggleBtn.className = 'btn btn-secondary control-btn';
+                } else {
+                    statusBadge.textContent = 'System Status: Active (Online)';
+                    statusBadge.className = 'status-badge inactive';
+                    toggleBtn.textContent = 'Enable Lockdown';
+                    toggleBtn.className = 'btn btn-primary control-btn';
+                }
+            }
+
+            toggleBtn.onclick = () => {
+                const isMaintenance = localStorage.getItem('satyasetu_maintenance_mode') === 'true';
+                localStorage.setItem('satyasetu_maintenance_mode', isMaintenance ? 'false' : 'true');
+                updateUI();
+            };
+
+            updateUI();
+        });
+    </script>
+</body>
+</html>

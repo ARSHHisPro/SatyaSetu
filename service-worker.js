@@ -20,7 +20,10 @@ const ASSETS = [
     '/styles.css',
     '/config.js',
     '/app.js',
-    '/firebase.js',
+    '/cloud.js',
+    '/libs/cloud-core.js',
+    '/libs/cloud-auth.js',
+    '/libs/cloud-db.js',
     '/ui.js',
     '/ai.js',
     '/charts.js',
@@ -58,8 +61,8 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
     if (e.request.method !== 'GET') return;
 
-    const isFirebase = e.request.url.includes('firebase') || e.request.url.includes('googleapis');
-    if (isFirebase) return;
+    const isCloudInternal = e.request.url.includes('firebaseapp.com') || e.request.url.includes('googleapis');
+    if (isCloudInternal) return;
 
     e.respondWith(
         caches.match(e.request).then((cachedResponse) => {

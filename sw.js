@@ -8,16 +8,18 @@ const ASSETS = [
     '/dashboard.html',
     '/privacy.html',
     '/manifest.json',
-    '/css/styles.css',
-    '/css/animations.css',
-    '/config/config.js',
-    '/js/app.js',
-    '/js/firebase.js',
-    '/js/ui.js',
-    '/js/ai.js',
-    '/js/charts.js',
-    '/js/validation.js',
-    '/js/utils.js',
+    '/styles.css',
+    '/config.js',
+    '/app.js',
+    '/cloud.js',
+    '/libs/cloud-core.js',
+    '/libs/cloud-auth.js',
+    '/libs/cloud-db.js',
+    '/ui.js',
+    '/ai.js',
+    '/charts.js',
+    '/validation.js',
+    '/utils.js',
     'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap',
     'https://unpkg.com/lucide@latest',
     'https://cdn.jsdelivr.net/npm/chart.js'
@@ -38,7 +40,7 @@ self.addEventListener('activate', (e) => {
             return Promise.all(
                 keys.map((key) => {
                     if (key !== CACHE_NAME) {
-                        console.log('Service Worker: Clearing legacy cache version', key);
+                        console.log('Service Worker: Caching update clean version', key);
                         return caches.delete(key);
                     }
                 })
@@ -50,8 +52,8 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
     if (e.request.method !== 'GET') return;
 
-    const isFirebase = e.request.url.includes('firebase') || e.request.url.includes('googleapis');
-    if (isFirebase) return;
+    const isCloudInternal = e.request.url.includes('firebaseapp.com') || e.request.url.includes('googleapis');
+    if (isCloudInternal) return;
 
     e.respondWith(
         caches.match(e.request).then((cachedResponse) => {

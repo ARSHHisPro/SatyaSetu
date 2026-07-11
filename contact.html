@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -160,13 +160,31 @@
                         <p style="color:var(--text-muted); font-size:13px; line-height:1.6;">For official inquiries, database access, or academic verification of the SDG-16 Sandbox, contact our support address directly.</p>
                     </div>
 
-                    <div class="email-display-box">
-                        <span id="email-text">setu.satya2026@gmail.com</span>
-                        <button class="copy-email-btn" id="copy-email-btn">Copy</button>
+                    <div style="display:flex; flex-direction:column; gap:8px; width:100%;">
+                        <span style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--text-muted); letter-spacing:0.5px;">Primary Channel</span>
+                        <div class="email-display-box">
+                            <span style="display:flex; align-items:center; gap:8px;">
+                                <i data-lucide="mail" style="width:16px; height:16px; color:#ea4335;"></i>
+                                <span id="email-text">setu.satya2026@gmail.com</span>
+                            </span>
+                            <button class="copy-email-btn" id="copy-email-btn">Copy</button>
+                        </div>
                     </div>
 
-                    <div style="display:flex; gap:12px; margin-top:8px;">
-                        <a href="mailto:setu.satya2026@gmail.com" class="btn btn-primary" style="flex-grow:1; text-align:center; padding:12px; font-size:12px; text-decoration:none;">Open Mail Client</a>
+                    <div style="display:flex; flex-direction:column; gap:8px; width:100%; margin-top:8px;">
+                        <span style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--text-muted); letter-spacing:0.5px;">Alternative Support</span>
+                        <div class="email-display-box">
+                            <span style="display:flex; align-items:center; gap:8px;">
+                                <i data-lucide="mail" style="width:16px; height:16px; color:#ea4335;"></i>
+                                <span id="alt-email-text">citizensupport.satyasetu@gmail.com</span>
+                            </span>
+                            <button class="copy-email-btn" id="copy-alt-email-btn">Copy</button>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:12px; margin-top:12px; width:100%;">
+                        <a href="mailto:setu.satya2026@gmail.com" class="btn btn-primary" style="flex-grow:1; text-align:center; padding:12px; font-size:12px; text-decoration:none;">Mail Primary</a>
+                        <a href="mailto:citizensupport.satyasetu@gmail.com" class="btn btn-secondary" style="flex-grow:1; text-align:center; padding:12px; font-size:12px; text-decoration:none;">Mail Alt</a>
                     </div>
                 </div>
 
@@ -214,17 +232,17 @@
         </div>
     </footer>
 
-    <!-- Firebase Compat SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <!-- Secure Cloud Storage Protocol SDKs -->
+    <script src="libs/cloud-core.js"></script>
+    <script src="libs/cloud-auth.js"></script>
+    <script src="libs/cloud-db.js"></script>
 
     <!-- Project Modules -->
     <script src="config.js"></script>
     <script src="utils.js"></script>
     <script src="validation.js"></script>
     <script src="ai.js"></script>
-    <script src="firebase.js"></script>
+    <script src="cloud.js"></script>
     <script src="ui.js"></script>
     <script src="app.js"></script>
 
@@ -247,7 +265,21 @@
                 };
             }
 
-            // 2. Form Submission with Firebase
+            const copyAltBtn = document.getElementById('copy-alt-email-btn');
+            if (copyAltBtn) {
+                copyAltBtn.onclick = (e) => {
+                    e.preventDefault();
+                    navigator.clipboard.writeText("citizensupport.satyasetu@gmail.com")
+                        .then(() => {
+                            window.UI.showToast("Email Copied", "citizensupport.satyasetu@gmail.com copied to clipboard.", "success");
+                        })
+                        .catch(() => {
+                            window.UI.showToast("Copy Failed", "Please manually highlight and copy the email.", "error");
+                        });
+                };
+            }
+
+            // 2. Form Submission with Cloud
             const form = document.getElementById('contact-us-form');
             if (form) {
                 form.onsubmit = async (e) => {
@@ -273,14 +305,14 @@
                         console.error(err);
                     }
 
-                    // Try Firebase submit if initialized
-                    if (window.FIREBASE && window.FIREBASE.isReady()) {
+                    // Try Cloud submit if initialized
+                    if (window.CLOUD && window.CLOUD.isReady()) {
                         try {
-                            window.UI.showToast("Syncing Database", "Transmitting feedback to Firestore...", "info");
-                            await window.FIREBASE.submitFeedback(newInquiry);
-                            window.UI.showToast("Message Transmitted", "Your message is synced with our Firebase Realtime database.", "success");
+                            window.UI.showToast("Syncing Database", "Transmitting feedback to Cloud...", "info");
+                            await window.CLOUD.submitFeedback(newInquiry);
+                            window.UI.showToast("Message Transmitted", "Your message is synced with our Cloud Realtime database.", "success");
                         } catch (error) {
-                            console.warn("Firebase sync failed, saved locally instead:", error);
+                            console.warn("Cloud sync failed, saved locally instead:", error);
                             window.UI.showToast("Offline Stored", "Saved locally. Will sync when back online.", "warning");
                         }
                     } else {

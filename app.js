@@ -22,7 +22,7 @@ const TRANSLATIONS = {
         card2_title: "SDG Goal 16",
         card2_desc: "Promote fair, inclusive, peaceful societies. Build responsive, accountable structural environments by modeling local development monitoring workflows.",
         card3_title: "Connected Sandbox",
-        card3_desc: "Features real-time client synchronization directly with your registered Firebase Realtime database. It gracefully falls back to local storage offline.",
+        card3_desc: "Features real-time client synchronization directly with your registered Cloud Realtime database. It gracefully falls back to local storage offline.",
         start_tracking: "Start Tracking Community Integrity Now",
         register_now: "Register Complaint",
         explore_dash: "Explore Dashboard",
@@ -114,7 +114,7 @@ async function initApp() {
     setupLanguageSelector();
     setupPWAInstall();
 
-    // 5. Initialize Firebase compat SDK
+    // 5. Initialize Cloud storage SDK
     const connectionBadge = document.getElementById('connection-badge');
     const userBadge = document.getElementById('user-info-badge');
 
@@ -123,7 +123,7 @@ async function initApp() {
         connectionBadge.className = "badge badge-warning";
     }
 
-    const firebaseResult = await window.FIREBASE.init((user) => {
+    const cloudResult = await window.CLOUD.init((user) => {
         if (user) {
             window.App.isCloudActive = true;
             if (userBadge) {
@@ -137,12 +137,12 @@ async function initApp() {
             }
             setupRealtimeSync();
         } else {
-            handleFirebaseDisconnected();
+            handleCloudDisconnected();
         }
     });
 
-    if (!firebaseResult.success) {
-        handleFirebaseDisconnected();
+    if (!cloudResult.success) {
+        handleCloudDisconnected();
     }
 
     // 6. Run Page specific initialization routines contextually
@@ -161,7 +161,7 @@ function initTheme() {
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const shouldBeDark = cachedTheme === 'dark' || (!cachedTheme && systemPrefersDark);
     
-    document.body.classList.toggle('dark-theme', shouldBeDark);
+    document.body.classList.toggle('light-theme', !shouldBeDark);
 }
 
 function saveThemePreference(isDark) {
@@ -191,7 +191,7 @@ function setupRealtimeSync() {
         window.UI.showSkeletons('submissions-list');
     }
 
-    syncUnsubscribe = window.FIREBASE.subscribeToComplaints(
+    syncUnsubscribe = window.CLOUD.subscribeToComplaints(
         (cloudComplaints) => {
             if (cloudComplaints && cloudComplaints.length > 0) {
                 window.App.complaints = cloudComplaints;
@@ -210,7 +210,7 @@ function setupRealtimeSync() {
     );
 }
 
-function handleFirebaseDisconnected() {
+function handleCloudDisconnected() {
     window.App.isCloudActive = false;
     const connectionBadge = document.getElementById('connection-badge');
     const userBadge = document.getElementById('user-info-badge');
@@ -299,9 +299,9 @@ function renderLandingStats() {
     const severeEl = document.getElementById('landing-stat-severe');
     const confidenceEl = document.getElementById('landing-stat-confidence');
 
-    if (totalEl) totalEl.textContent = stats.total;
-    if (severeEl) severeEl.textContent = stats.criticalCount + stats.highCount;
-    if (confidenceEl) confidenceEl.textContent = `${(stats.avgConfidence * 100).toFixed(0)}%`;
+    if (totalEl) window.UI.animateCount(totalEl, stats.total);
+    if (severeEl) window.UI.animateCount(severeEl, stats.criticalCount + stats.highCount);
+    if (confidenceEl) window.UI.animateCount(confidenceEl, `${(stats.avgConfidence * 100).toFixed(0)}%`);
 }
 
 // Page: report.html
@@ -504,7 +504,7 @@ async function handleSubmitComplaint() {
         let savedToCloud = false;
         if (window.App.isCloudActive) {
             try {
-                await window.FIREBASE.submitComplaint(record);
+                await window.CLOUD.submitComplaint(record);
                 savedToCloud = true;
                 window.UI.showToast("Record Transmitted", `Case logged successfully. ID: ${uniqueId}`, "success");
             } catch (err) {
@@ -645,10 +645,10 @@ function renderDashboardComplaints() {
     const spamEl = document.getElementById('stat-spam');
     const confidenceEl = document.getElementById('stat-confidence');
     
-    if (totalEl) totalEl.textContent = stats.total;
-    if (severeEl) severeEl.textContent = stats.criticalCount + stats.highCount;
-    if (spamEl) spamEl.textContent = stats.flagged;
-    if (confidenceEl) confidenceEl.textContent = `${(stats.avgConfidence * 100).toFixed(0)}%`;
+    if (totalEl) window.UI.animateCount(totalEl, stats.total);
+    if (severeEl) window.UI.animateCount(severeEl, stats.criticalCount + stats.highCount);
+    if (spamEl) window.UI.animateCount(spamEl, stats.flagged);
+    if (confidenceEl) window.UI.animateCount(confidenceEl, `${(stats.avgConfidence * 100).toFixed(0)}%`);
 
     // Render Recent 3 complaints
     const listContainer = document.getElementById('submissions-list');
@@ -858,7 +858,7 @@ function renderComplaintDetails() {
                 if (confirm("Are you sure you want to remove this complaint?")) {
                     try {
                         if (window.App.isCloudActive && item._firestore_id) {
-                            await window.FIREBASE.deleteComplaint(firestoreId);
+                            await window.CLOUD.deleteComplaint(firestoreId);
                             window.UI.showToast("Record Removed", "Successfully deleted complaint record.", "success");
                         } else {
                             window.App.complaints = window.App.complaints.filter(c => c.id !== item.id);
@@ -1248,7 +1248,14 @@ function applyTranslations(lang) {
             if (el.tagName === 'INPUT' && el.hasAttribute('placeholder')) {
                 el.setAttribute('placeholder', dict[key]);
             } else {
-                el.textContent = dict[key];
+                if (key === 'tagline') {
+                    el.innerHTML = dict[key];
+                    if (window.UI.applyTextReveal) {
+                        window.UI.applyTextReveal(el);
+                    }
+                } else {
+                    el.textContent = dict[key];
+                }
             }
         }
     });

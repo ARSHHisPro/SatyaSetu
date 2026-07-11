@@ -8,13 +8,27 @@ let currentPage = 1;
 
 window.UI = {
     init(onThemeToggleCallback, onFileSelectCallback) {
+        const toggleTheme = () => {
+            const isLight = document.body.classList.toggle('light-theme');
+            if (onThemeToggleCallback) onThemeToggleCallback(!isLight);
+            
+            // Sync footer theme button icon/text
+            const footerThemeIcon = document.querySelector('#footer-theme-toggle i');
+            if (footerThemeIcon && window.lucide) {
+                footerThemeIcon.setAttribute('data-lucide', isLight ? 'moon' : 'sun');
+                window.lucide.createIcons();
+            }
+        };
+
         const themeBtn = document.getElementById('theme-toggle-btn');
         if (themeBtn) {
-            themeBtn.onclick = () => {
-                const isDark = document.body.classList.toggle('dark-theme');
-                if (onThemeToggleCallback) onThemeToggleCallback(isDark);
+            themeBtn.onclick = (e) => {
+                e.preventDefault();
+                toggleTheme();
             };
         }
+        
+        window.UI._themeToggleCallback = toggleTheme;
 
         if (document.getElementById('image-dropzone')) {
             this.setupDragAndDrop('image-dropzone', 'image-upload', 'image', (images) => {
@@ -663,5 +677,671 @@ window.UI = {
             const video = document.getElementById('detail-video');
             if (video) video.pause?.();
         }
+    }
+};
+
+// -------------------------------------------------------------
+// Satyasetu Premium Dynamic Visuals & Effects
+// -------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+    // 0. Global Maintenance Mode Check
+    const isMaintenance = localStorage.getItem('satyasetu_maintenance_mode') === 'true';
+    const isControlPage = window.location.pathname.includes('fixmain.html');
+    
+    if (isMaintenance && !isControlPage) {
+        const overlay = document.createElement('div');
+        overlay.style.position = 'fixed';
+        overlay.style.inset = '0';
+        overlay.style.background = '#03050c';
+        overlay.style.zIndex = '999999';
+        overlay.style.display = 'flex';
+        overlay.style.flexDirection = 'column';
+        overlay.style.justifyContent = 'center';
+        overlay.style.alignItems = 'center';
+        overlay.style.padding = '40px';
+        overlay.style.textAlign = 'center';
+        overlay.style.color = '#ffffff';
+        overlay.style.fontFamily = 'system-ui, sans-serif';
+        
+        overlay.innerHTML = `
+            <div style="max-width:500px; padding:40px; border-radius:16px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); backdrop-filter:blur(20px); box-shadow:0 20px 50px rgba(0,0,0,0.5);">
+                <div style="font-size:48px; margin-bottom:20px; animation: pulse 2s infinite;">🚧</div>
+                <h2 style="font-size:24px; font-weight:900; margin-bottom:12px; background:linear-gradient(90deg, #818cf8, #22d3ee); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">System Sandbox Lockdown</h2>
+                <p style="color:#94a3b8; font-size:14px; line-height:1.6; margin-bottom:24px;">
+                    SatyaSetu is currently undergoing scheduled cryptographic synchronization and database maintenance.
+                </p>
+                <div style="display:inline-block; font-size:11px; font-weight:800; text-transform:uppercase; color:#94a3b8; letter-spacing:1.5px; border-top:1px solid rgba(255,255,255,0.08); padding-top:16px; width:100%;">
+                    SDG Goal 16 Core Engine v1.12
+                </div>
+            </div>
+            <style>
+                @keyframes pulse {
+                    0%, 100% { opacity: 0.6; transform: scale(1); }
+                    50% { opacity: 1; transform: scale(1.05); }
+                }
+                body { overflow: hidden !important; }
+            </style>
+        `;
+        document.body.appendChild(overlay);
+        return; // Halt any further rendering
+    }
+
+    // 0.1 Cookie Consent Banner Check
+    const cookiesAccepted = localStorage.getItem('satyasetu_cookies_accepted') === 'true';
+    if (!cookiesAccepted && !isControlPage) {
+        const cookieBanner = document.createElement('div');
+        cookieBanner.id = 'cookie-consent-banner';
+        cookieBanner.className = 'cookie-banner';
+        cookieBanner.innerHTML = `
+            <div class="cookie-banner-text">
+                <strong>🍪 Cookie Consent Notice:</strong> We use cookies to verify session access, retain local database backups (sandbox mode), and analyze app performance. By continuing, you agree to our policies.
+            </div>
+            <div class="cookie-banner-actions">
+                <a href="privacy.html" class="btn btn-secondary" style="padding:6px 12px; font-size:11px; text-decoration:none;">Read Privacy Shield</a>
+                <button id="cookie-accept-btn" class="btn btn-primary" style="padding:6px 12px; font-size:11px;">Accept Cookies</button>
+            </div>
+        `;
+        document.body.appendChild(cookieBanner);
+        
+        // Stagger entrance animation
+        setTimeout(() => {
+            cookieBanner.classList.add('active');
+        }, 1000);
+
+        document.getElementById('cookie-accept-btn').onclick = (e) => {
+            e.preventDefault();
+            localStorage.setItem('satyasetu_cookies_accepted', 'true');
+            cookieBanner.classList.remove('active');
+            setTimeout(() => cookieBanner.remove(), 500);
+        };
+    }
+
+    // 1. Mouse Glow Effect & Smooth Lerping
+    const glow = document.createElement('div');
+    glow.className = 'mouse-glow';
+    document.body.appendChild(glow);
+
+    let targetX = 0, targetY = 0;
+    let currentX = 0, currentY = 0;
+
+    document.addEventListener('mousemove', (e) => {
+        targetX = e.clientX;
+        targetY = e.clientY;
+        glow.style.opacity = '1';
+    });
+
+    document.addEventListener('mouseleave', () => {
+        glow.style.opacity = '0';
+    });
+
+    function updateGlow() {
+        currentX += (targetX - currentX) * 0.12;
+        currentY += (targetY - currentY) * 0.12;
+        glow.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) translate(-50%, -50%)`;
+        requestAnimationFrame(updateGlow);
+    }
+    updateGlow();
+
+    // 2. Spotlight Coordinates & Magnetic Hover via Event Delegation
+    document.addEventListener('mousemove', (e) => {
+        // Spotlight Cards
+        const card = e.target.closest('.glass-card, .glass-panel, .btn');
+        if (card) {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            card.style.setProperty('--mouse-x', `${x}px`);
+            card.style.setProperty('--mouse-y', `${y}px`);
+        }
+
+        // Magnetic Button Physics
+        const magnetic = e.target.closest('.btn, .action-btn, .fab');
+        if (magnetic) {
+            const rect = magnetic.getBoundingClientRect();
+            const x = e.clientX - (rect.left + rect.width / 2);
+            const y = e.clientY - (rect.top + rect.height / 2);
+            magnetic.style.transform = `translate(${x * 0.22}px, ${y * 0.22}px) scale(1.03)`;
+            magnetic.style.transition = 'transform 0.1s cubic-bezier(0.25, 1, 0.5, 1)';
+        }
+    });
+
+    document.addEventListener('mouseout', (e) => {
+        const magnetic = e.target.closest('.btn, .action-btn, .fab');
+        if (magnetic && (!e.relatedTarget || !magnetic.contains(e.relatedTarget))) {
+            magnetic.style.transform = '';
+            magnetic.style.transition = 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
+        }
+    });
+
+    // 3. Click Ripples Expanding Circles
+    window.addEventListener('click', (e) => {
+        // Ignore clicks on inputs/textareas to not interrupt focus
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        const ripple = document.createElement('div');
+        ripple.className = 'click-ripple';
+        ripple.style.left = `${e.clientX}px`;
+        ripple.style.top = `${e.clientY}px`;
+
+        for (let i = 0; i < 3; i++) {
+            const circle = document.createElement('span');
+            circle.style.width = '12px';
+            circle.style.height = '12px';
+            circle.style.left = '-6px';
+            circle.style.top = '-6px';
+            ripple.appendChild(circle);
+        }
+
+        document.body.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 1000);
+    });
+
+    // 4. Background Canvas Particles
+    const canvas = document.createElement('canvas');
+    canvas.className = 'particle-canvas';
+    canvas.style.position = 'fixed';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.width = '100vw';
+    canvas.style.height = '100vh';
+    canvas.style.zIndex = '-1';
+    canvas.style.pointerEvents = 'none';
+    document.body.appendChild(canvas);
+
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Create 45 particles
+    const particleCount = 45;
+    for (let i = 0; i < particleCount; i++) {
+        particles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            r: Math.random() * 1.5 + 0.5,
+            vx: (Math.random() - 0.5) * 0.2,
+            vy: (Math.random() - 0.5) * 0.2,
+            opacity: Math.random() * 0.5 + 0.1
+        });
+    }
+
+    function animateParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const isDark = document.body.classList.contains('dark-theme') || !document.body.classList.contains('light-theme');
+        ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(79, 70, 229, 0.2)';
+
+        particles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+
+            if (p.x < 0) p.x = canvas.width;
+            if (p.x > canvas.width) p.x = 0;
+            if (p.y < 0) p.y = canvas.height;
+            if (p.y > canvas.height) p.y = 0;
+
+            ctx.beginPath();
+            ctx.globalAlpha = p.opacity;
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+    // 5. Prepend Wave and build Premium Tech Grid Footer
+    const footer = document.querySelector('footer');
+    if (footer) {
+        const wave = document.createElement('div');
+        wave.className = 'wave-divider';
+        footer.parentNode.insertBefore(wave, footer);
+        
+        footer.className = 'premium-footer';
+        footer.innerHTML = `
+            <div class="max-width-container footer-grid">
+                <div class="footer-col brand-col">
+                    <a href="index.html" class="brand" style="text-decoration:none;">
+                        <span>SatyaSetu</span>
+                        <span class="sdg-badge">SDG 16</span>
+                    </a>
+                    <p class="footer-desc">Securing community integrity. Promoting SDG Goal 16 (Peace, Justice, and Strong Institutions) via decentralized sandbox auditing.</p>
+                </div>
+                <div class="footer-col links-col">
+                    <h4>// NAVIGATION ARCH</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="report.html">Register Complaint</a></li>
+                        <li><a href="dashboard.html">Reports Hub</a></li>
+                        <li><a href="quiz.html">Integrity Quiz</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col links-col">
+                    <h4>// COMMS DIRECTORY</h4>
+                    <ul>
+                        <li><a href="mailto:support@satyasetu.org">support@satyasetu.org</a></li>
+                        <li><span class="footer-static-info">Secured Offline Sandbox Sync</span></li>
+                        <li><span class="footer-static-info">SDG Global Operations Network</span></li>
+                    </ul>
+                </div>
+                <div class="footer-col links-col">
+                    <h4>// SYNDICATE</h4>
+                    <ul>
+                        <li><a href="https://github.com/UN-SDG/SDG-16" target="_blank">SDG Goal 16 Hub</a></li>
+                        <li><a href="privacy.html">Privacy Shield</a></li>
+                        <li><a href="about.html">About Initiative</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="max-width-container footer-bottom">
+                <p class="copyright">© 2026 SatyaSetu. All rights reserved.</p>
+                <div class="footer-actions-row">
+                    <a href="privacy.html" class="footer-action-link">Privacy Shield</a>
+                    <a href="about.html" class="footer-action-link">Terms of Operations</a>
+                    <button class="footer-action-btn" id="footer-theme-toggle">
+                        <i data-lucide="sun" style="width:14px; height:14px; margin-right:4px; display:inline-block; vertical-align:middle;"></i> Shift Environment
+                    </button>
+                    <button class="footer-action-btn secure-uplink-btn" id="footer-admin-toggle">
+                        // OPEN UPLINK 🔒
+                    </button>
+                </div>
+                <p class="system-status">SYSTEM SECURED // SDG CORE V1.12</p>
+            </div>
+        `;
+
+        // Bind theme toggle callback
+        const footerThemeBtn = document.getElementById('footer-theme-toggle');
+        if (footerThemeBtn) {
+            footerThemeBtn.onclick = (e) => {
+                e.preventDefault();
+                if (window.UI._themeToggleCallback) window.UI._themeToggleCallback();
+            };
+        }
+        
+        // Sync footer theme button icon based on current theme state
+        const footerThemeIcon = document.querySelector('#footer-theme-toggle i');
+        if (footerThemeIcon) {
+            const isLight = document.body.classList.contains('light-theme');
+            footerThemeIcon.setAttribute('data-lucide', isLight ? 'moon' : 'sun');
+        }
+
+        // Bind Admin Panel uplink callback
+        const adminToggleBtn = document.getElementById('footer-admin-toggle');
+        if (adminToggleBtn) {
+            adminToggleBtn.onclick = async (e) => {
+                e.preventDefault();
+                const hasSession = sessionStorage.getItem('satyasetu_admin_session') === 'true';
+                if (hasSession) {
+                    openAdminPanel();
+                } else {
+                    const cloudPass = window.CLOUD.getAdminPassword ? await window.CLOUD.getAdminPassword() : null;
+                    
+                    if (cloudPass === null) {
+                        // First-time setup
+                        const newPass = prompt("WELCOME! No administrative password is currently set.\nPlease configure a secure console passcode (minimum 6 characters):");
+                        if (newPass === null) return;
+                        const trimmed = newPass.trim();
+                        if (trimmed.length < 6) {
+                            window.UI.showToast("Invalid Password", "Passphrase must be at least 6 characters.", "warning");
+                            return;
+                        }
+                        try {
+                            window.UI.showToast("Initializing Console", "Configuring secure database sync...", "info");
+                            if (window.CLOUD.setAdminPassword) {
+                                await window.CLOUD.setAdminPassword(trimmed);
+                                sessionStorage.setItem('satyasetu_admin_session', 'true');
+                                window.UI.showToast("Passphrase Saved", "System unlocked. Administrative access configured.", "success");
+                                openAdminPanel();
+                            } else {
+                                throw new Error("Cloud database offline.");
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            window.UI.showToast("Setup Failed", err.message || "Could not write credentials.", "error");
+                        }
+                    } else {
+                        // Standard verification
+                        const pass = prompt("ENTER SECURE SECURITY ACCESS PASS:");
+                        if (pass !== null) {
+                            if (pass === cloudPass) {
+                                sessionStorage.setItem('satyasetu_admin_session', 'true');
+                                window.UI.showToast("Uplink Established", "Security access level: ADMINISTRATOR", "success");
+                                openAdminPanel();
+                            } else {
+                                window.UI.showToast("Access Denied", "Invalid administrative passphrase.", "error");
+                            }
+                        }
+                    }
+                }
+            };
+        }
+
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
+    }
+
+    // 6. Sticky Bottom CTA for Mobile (Requirement 13)
+    const isReportPage = document.body.id === 'page-report' || window.location.pathname.includes('report.html');
+    if (window.innerWidth <= 768 && !isReportPage) {
+        const mobileCTA = document.createElement('div');
+        mobileCTA.className = 'mobile-sticky-cta';
+        mobileCTA.innerHTML = `
+            <a href="report.html" class="btn btn-primary">Register Concern 🛡️</a>
+            <a href="dashboard.html" class="btn btn-secondary">Reports Hub</a>
+        `;
+        document.body.appendChild(mobileCTA);
+    }
+
+    // 7. Initialize Title Reveal on Load (Requirement 16)
+    const tagline = document.querySelector('[data-translate="tagline"]');
+    if (tagline) {
+        window.UI.applyTextReveal(tagline);
+    }
+
+    // 8. Inject secure admin panel overlay HTML
+    let adminOverlay = document.getElementById('admin-secure-panel');
+    if (!adminOverlay) {
+        adminOverlay = document.createElement('div');
+        adminOverlay.id = 'admin-secure-panel';
+        adminOverlay.className = 'admin-overlay';
+        adminOverlay.innerHTML = `
+            <div class="admin-header">
+                <h2>🏛️ SatyaSetu Administrative Sandbox</h2>
+                <div style="display:flex; gap:12px;">
+                    <button class="btn btn-secondary" id="admin-export-json-btn" style="padding: 10px 18px; font-size:12px;">Export JSON</button>
+                    <button class="btn btn-secondary" id="admin-export-csv-btn" style="padding: 10px 18px; font-size:12px;">Export CSV</button>
+                    <button class="btn btn-secondary" id="admin-change-pass-btn" style="padding: 10px 18px; font-size:12px;">Change Password</button>
+                    <button class="btn btn-secondary" id="admin-reset-db-btn" style="padding: 10px 18px; font-size:12px;">Reset Database</button>
+                    <button class="btn btn-primary" id="admin-close-btn" style="padding: 10px 18px; font-size:12px;">Close Console</button>
+                </div>
+            </div>
+            
+            <div class="admin-grid">
+                <div class="admin-stats">
+                    <div class="admin-stat-card">
+                        <h5>Total logged records</h5>
+                        <p id="admin-stat-total">0</p>
+                    </div>
+                    <div class="admin-stat-card">
+                        <h5>Severe/Critical Flags</h5>
+                        <p id="admin-stat-severe" style="color:var(--neon-rose);">0</p>
+                    </div>
+                    <div class="admin-stat-card">
+                        <h5>Spam/Flagged by AI</h5>
+                        <p id="admin-stat-spam" style="color:var(--neon-amber);">0</p>
+                    </div>
+                    <div class="admin-stat-card">
+                        <h5>Avg AI Trust Confidence</h5>
+                        <p id="admin-stat-confidence" style="color:var(--neon-emerald);">0%</p>
+                    </div>
+                </div>
+                
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Date</th>
+                                <th>Title</th>
+                                <th>Classification</th>
+                                <th>Severity</th>
+                                <th>AI Spam Score</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-table-body">
+                            <!-- Dynamic complaints list goes here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(adminOverlay);
+
+        // Bind control buttons
+        document.getElementById('admin-close-btn').onclick = () => {
+            adminOverlay.classList.remove('active');
+        };
+        
+        document.getElementById('admin-export-json-btn').onclick = () => {
+            exportData('json');
+        };
+        
+        document.getElementById('admin-export-csv-btn').onclick = () => {
+            exportData('csv');
+        };
+
+        document.getElementById('admin-change-pass-btn').onclick = async () => {
+            const newPass = prompt("ENTER NEW ADMINISTRATIVE PASSPHRASE:");
+            if (newPass === null) return;
+            const trimmed = newPass.trim();
+            if (trimmed.length < 6) {
+                window.UI.showToast("Invalid Password", "Passphrase must be at least 6 characters.", "warning");
+                return;
+            }
+            try {
+                window.UI.showToast("Syncing Credentials", "Updating cloud credentials...", "info");
+                if (window.CLOUD.setAdminPassword) {
+                    await window.CLOUD.setAdminPassword(trimmed);
+                    window.UI.showToast("Credentials Updated", "New administrative password synced with the cloud.", "success");
+                } else {
+                    throw new Error("Cloud authentication service is unavailable.");
+                }
+            } catch (err) {
+                console.error(err);
+                window.UI.showToast("Update Failure", err.message || "Failed to update cloud password.", "error");
+            }
+        };
+        
+        document.getElementById('admin-reset-db-btn').onclick = () => {
+            if (confirm("This will reset the entire sandbox database back to the mock complaints list. Proceed?")) {
+                window.App.complaints = [...window.CONFIG.MOCK_COMPLAINTS];
+                localStorage.setItem(window.CONFIG.LOCAL_STORAGE_KEY, JSON.stringify(window.App.complaints));
+                window.UI.showToast("Database Reset", "Reverted database to mock template data.", "success");
+                renderAdminTable();
+                document.dispatchEvent(new Event('page-changed'));
+            }
+        };
+    }
+
+    function openAdminPanel() {
+        adminOverlay.classList.add('active');
+        renderAdminTable();
+    }
+
+    function renderAdminTable() {
+        const list = window.App.complaints || [];
+        const stats = window.CHARTS ? window.CHARTS.computeStatistics(list) : { total: list.length, criticalCount: 0, highCount: 0, flagged: 0, avgConfidence: 0 };
+        
+        document.getElementById('admin-stat-total').textContent = list.length;
+        document.getElementById('admin-stat-severe').textContent = stats.criticalCount + stats.highCount;
+        document.getElementById('admin-stat-spam').textContent = stats.flagged;
+        document.getElementById('admin-stat-confidence').textContent = `${(stats.avgConfidence * 100).toFixed(0)}%`;
+        
+        const tbody = document.getElementById('admin-table-body');
+        if (!tbody) return;
+        
+        if (list.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--text-muted);">No records found in database.</td></tr>`;
+            return;
+        }
+        
+        tbody.innerHTML = list.map(c => {
+            const spamPercent = c.ai_analysis ? Math.round(c.ai_analysis.spamScore * 100) : 0;
+            const firestoreId = c._firestore_id || c.id;
+            const isLocal = !window.App.isCloudActive || !c._firestore_id || String(c.id).startsWith('local_');
+            const statusActionLabel = c.status === 'Resolved' ? 'Reopen' : 'Resolve';
+            const spamActionLabel = c.status === 'Flagged' ? 'Approve' : 'Flag Spam';
+            
+            return `
+                <tr>
+                    <td style="font-family:monospace; font-size:11px;">${c.id}</td>
+                    <td>${c.event_date}</td>
+                    <td style="font-weight:700; max-width:240px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${window.UTILS.escapeHtml(c.title)}">${window.UTILS.escapeHtml(c.title)}</td>
+                    <td>${c.classification}</td>
+                    <td><span class="badge ${c.severity === 'Critical' || c.severity === 'High' ? 'badge-danger' : c.severity === 'Medium' ? 'badge-warning' : 'badge-info'}">${c.severity}</span></td>
+                    <td>${spamPercent}%</td>
+                    <td><span class="badge ${c.status === 'Resolved' ? 'badge-success' : c.status === 'Flagged' ? 'badge-danger' : c.status === 'Under Review' ? 'badge-warning' : 'badge-info'}">${c.status}</span></td>
+                    <td class="admin-actions">
+                        <button class="admin-btn-sm approve" onclick="window.UI.adminChangeStatus('${c.id}', '${c.status === 'Resolved' ? 'Pending' : 'Resolved'}')">${statusActionLabel}</button>
+                        <button class="admin-btn-sm spam" onclick="window.UI.adminChangeStatus('${c.id}', '${c.status === 'Flagged' ? 'Pending' : 'Flagged'}')">${spamActionLabel}</button>
+                        <button class="admin-btn-sm delete" onclick="window.UI.adminDelete('${c.id}', '${firestoreId}', ${isLocal})">Delete</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // Expose renderAdminTable globally
+    window.UI._renderAdminTable = renderAdminTable;
+
+    function exportData(format) {
+        const data = window.App.complaints || [];
+        let mimeType = 'application/json';
+        let content = '';
+        let filename = `satyasetu_export_${Date.now()}.json`;
+        
+        if (format === 'json') {
+            content = JSON.stringify(data, null, 2);
+        } else {
+            mimeType = 'text/csv';
+            filename = `satyasetu_export_${Date.now()}.csv`;
+            const headers = ['ID', 'Date', 'Title', 'Classification', 'Severity', 'Status', 'City', 'State', 'Created At'];
+            const rows = data.map(c => [
+                c.id,
+                c.event_date,
+                `"${c.title.replace(/"/g, '""')}"`,
+                c.classification,
+                c.severity,
+                c.status,
+                c.city,
+                c.state,
+                c.created_at
+            ]);
+            content = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+        }
+        
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+});
+
+// Animate Statistics Count-up helper (Requirement 9)
+window.UI.animateCount = function(element, targetVal, suffix = "") {
+    if (!element) return;
+    const startVal = parseInt(element.textContent, 10) || 0;
+    const isPercentage = String(targetVal).includes('%') || suffix === '%';
+    const target = parseInt(String(targetVal).replace('%', ''), 10) || 0;
+    
+    if (startVal === target) {
+        element.textContent = targetVal + (isPercentage && !String(targetVal).includes('%') ? '%' : '');
+        return;
+    }
+    
+    const duration = 1200; // ms
+    const startTime = performance.now();
+
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeProgress = progress * (2 - progress);
+        const currentVal = Math.round(startVal + (target - startVal) * easeProgress);
+        
+        element.textContent = currentVal + (isPercentage ? '%' : '');
+
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        } else {
+            element.textContent = targetVal + (isPercentage && !String(targetVal).includes('%') ? '%' : '');
+        }
+    }
+    requestAnimationFrame(update);
+};
+
+// Word-by-word reveal helper (Requirement 16)
+window.UI.applyTextReveal = function(element) {
+    if (!element) return;
+    if (element.querySelector('.word-reveal')) return;
+    
+    // Replace <br> tags with placeholder newlines to preserve them
+    let html = element.innerHTML;
+    html = html.replace(/<br\s*\/?>/gi, '\n');
+    
+    const lines = html.split('\n');
+    let wordIndex = 0;
+    
+    const animatedLines = lines.map(line => {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = line;
+        const textContent = tempDiv.textContent || tempDiv.innerText;
+        const words = textContent.trim().split(/\s+/).filter(w => w.length > 0);
+        
+        return words.map(word => {
+            const span = `<span class="word-reveal" style="animation-delay: ${wordIndex * 0.12}s">${word}</span>`;
+            wordIndex++;
+            return span;
+        }).join(' ');
+    });
+    
+    element.innerHTML = animatedLines.join('<br/>');
+};
+
+// Admin Moderation Callbacks
+window.UI.adminChangeStatus = async function(id, newStatus) {
+    const list = window.App.complaints || [];
+    const item = list.find(c => c.id === id);
+    if (!item) return;
+    
+    try {
+        item.status = newStatus;
+        if (window.App.isCloudActive && item._firestore_id) {
+            await window.CLOUD.submitComplaint(item);
+            window.UI.showToast("Cloud Synced", `Successfully updated status to ${newStatus}`, "success");
+        } else {
+            const idx = window.App.complaints.findIndex(c => c.id === id);
+            if (idx !== -1) window.App.complaints[idx] = item;
+            localStorage.setItem(window.CONFIG.LOCAL_STORAGE_KEY, JSON.stringify(window.App.complaints));
+            window.UI.showToast("Database Updated", `Saved status as ${newStatus} locally.`, "success");
+        }
+        // Dispatch page-changed event to refresh active views
+        document.dispatchEvent(new Event('page-changed'));
+        
+        // Re-draw admin panel table if open
+        if (window.UI._renderAdminTable) window.UI._renderAdminTable();
+    } catch (e) {
+        console.error(e);
+        window.UI.showToast("Admin Action Error", e.message || "Failed to update record.", "error");
+    }
+};
+
+window.UI.adminDelete = async function(id, firestoreId, isLocal) {
+    if (!confirm(`Are you sure you want to permanently delete record ${id}?`)) return;
+    
+    try {
+        if (window.App.isCloudActive && !isLocal) {
+            await window.CLOUD.deleteComplaint(firestoreId);
+            window.UI.showToast("Removed Cloud Record", "Successfully removed from database.", "success");
+        } else {
+            window.App.complaints = window.App.complaints.filter(c => c.id !== id);
+            localStorage.setItem(window.CONFIG.LOCAL_STORAGE_KEY, JSON.stringify(window.App.complaints));
+            window.UI.showToast("Removed Local Record", "Successfully removed from offline cache.", "success");
+        }
+        document.dispatchEvent(new Event('page-changed'));
+        if (window.UI._renderAdminTable) window.UI._renderAdminTable();
+    } catch (e) {
+        console.error(e);
+        window.UI.showToast("Admin Delete Error", e.message || "Failed to delete record.", "error");
     }
 };

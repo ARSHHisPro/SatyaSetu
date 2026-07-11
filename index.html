@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -95,19 +95,19 @@
     </header>
 
     <main class="max-width-container">
-        <section class="fade-in-el">
+        <section>
             <div class="hero-grid">
-                <div class="hero" style="text-align:left; margin:0;">
+                <div class="hero anim-slide-left" style="text-align:left; margin:0;">
                     <h1 data-translate="tagline">Peace, Justice & <br/>Strong Institutions</h1>
                     <p data-translate="hero_desc" style="margin-bottom:0;">SatyaSetu is a transparent, secure educational portal assisting citizens, educators, and evaluators to register and study community integrity indicators securely.</p>
                 </div>
-                <div class="glass-panel float-el" style="border-radius:var(--radius-lg); overflow:hidden; border:1px solid var(--glass-border); box-shadow:0 15px 35px var(--glass-shadow); padding: 0; line-height: 0;">
+                <div class="glass-panel anim-slide-right float-el" style="border-radius:var(--radius-lg); overflow:hidden; border:1px solid var(--glass-border); box-shadow:0 15px 35px var(--glass-shadow); padding: 0; line-height: 0;">
                     <img src="Bribe(curruption).png" style="width:100%; height:auto; display:block;" alt="Civic Integrity Corruption Illustration">
                 </div>
             </div>
 
             <!-- Visual Features Grid -->
-            <div class="grid-3">
+            <div class="grid-3 anim-scale-up">
                 <div class="glass-card h-card">
                     <div class="card-icon" style="background:rgba(99, 102, 241, 0.15); color:var(--neon-indigo); text-shadow:0 0 10px var(--neon-indigo);">
                         <i data-lucide="shield-check"></i>
@@ -129,12 +129,12 @@
                         <i data-lucide="database"></i>
                     </div>
                     <h3 data-translate="card3_title">Connected Sandbox</h3>
-                    <p data-translate="card3_desc">Features real-time client synchronization directly with your registered Firebase Realtime database. It gracefully falls back to local storage offline.</p>
+                    <p data-translate="card3_desc">Features real-time client synchronization directly with your registered Cloud Realtime database. It gracefully falls back to local storage offline.</p>
                 </div>
             </div>
 
             <!-- Page-Specific landing statistics preview -->
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:24px; margin-bottom:56px;">
+            <div class="anim-blur-fade" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:24px; margin-bottom:56px;">
                 <div class="glass-card stat-item" style="padding:20px;">
                     <div>
                         <span class="stat-label">Total Logged Cases</span>
@@ -156,7 +156,7 @@
             </div>
 
             <!-- Welcome Banner CTA -->
-            <div class="glass-panel interactive-panel float-el">
+            <div class="glass-panel interactive-panel anim-scale-up float-el">
                 <div class="interactive-left">
                     <h2 class="panel-title" data-translate="start_tracking">Start Tracking Community Integrity Now</h2>
                     
@@ -199,17 +199,17 @@
         </div>
     </footer>
 
-    <!-- Firebase Compat SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <!-- Secure Cloud Storage Protocol SDKs -->
+    <script src="libs/cloud-core.js"></script>
+    <script src="libs/cloud-auth.js"></script>
+    <script src="libs/cloud-db.js"></script>
 
     <!-- Custom Scripts -->
     <script src="config.js"></script>
     <script src="utils.js"></script>
     <script src="validation.js"></script>
     <script src="ai.js"></script>
-    <script src="firebase.js"></script>
+    <script src="cloud.js"></script>
     <script src="charts.js"></script>
     <script src="ui.js"></script>
     <script src="app.js"></script>

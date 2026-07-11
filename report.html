@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -84,16 +84,16 @@
     </header>
 
     <main class="max-width-container">
-        <section class="fade-in-el">
+        <section>
             
-            <div class="glass-panel form-panel">
-                <div class="form-header">
+            <div class="glass-panel form-panel anim-scale-up">
+                <div class="form-header anim-slide-left">
                     <h2 data-translate="form_title">Log Community Concern</h2>
                     <p data-translate="form_subtitle">All fields marked with an asterisk (*) are required.</p>
                 </div>
 
                 <!-- Strict Privacy Warning -->
-                <div class="alert">
+                <div class="alert anim-blur-fade">
                     <h4>
                         <i data-lucide="alert-triangle"></i>
                         Strict Privacy Compliance Notice
@@ -285,17 +285,17 @@
         </div>
     </footer>
 
-    <!-- Firebase Compat SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <!-- Secure Cloud Storage Protocol SDKs -->
+    <script src="libs/cloud-core.js"></script>
+    <script src="libs/cloud-auth.js"></script>
+    <script src="libs/cloud-db.js"></script>
 
     <!-- Custom Scripts -->
     <script src="config.js"></script>
     <script src="utils.js"></script>
     <script src="validation.js"></script>
     <script src="ai.js"></script>
-    <script src="firebase.js"></script>
+    <script src="cloud.js"></script>
     <script src="charts.js"></script>
     <script src="ui.js"></script>
     <script src="app.js"></script>
