@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -271,6 +271,42 @@
                     e.preventDefault();
                     navigator.clipboard.writeText("citizensupport.satyasetu@gmail.com")
                         .then(() => {
+    <script src="libs/cloud-db.js"></script>
+
+    <!-- Project Modules -->
+    <script src="config.js"></script>
+    <script src="utils.js"></script>
+    <script src="validation.js"></script>
+    <script src="ai.js"></script>
+    <script src="cloud.js"></script>
+    <script src="ui.js"></script>
+    <script src="app.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+
+            // 1. Copy email functionality
+            const copyBtn = document.getElementById('copy-email-btn');
+            if (copyBtn) {
+                copyBtn.onclick = (e) => {
+                    e.preventDefault();
+                    navigator.clipboard.writeText("setu.satya2026@gmail.com")
+                        .then(() => {
+                            window.UI.showToast("Email Copied", "setu.satya2026@gmail.com copied to clipboard.", "success");
+                        })
+                        .catch(() => {
+                            window.UI.showToast("Copy Failed", "Please manually highlight and copy the email.", "error");
+                        });
+                };
+            }
+
+            const copyAltBtn = document.getElementById('copy-alt-email-btn');
+            if (copyAltBtn) {
+                copyAltBtn.onclick = (e) => {
+                    e.preventDefault();
+                    navigator.clipboard.writeText("citizensupport.satyasetu@gmail.com")
+                        .then(() => {
                             window.UI.showToast("Email Copied", "citizensupport.satyasetu@gmail.com copied to clipboard.", "success");
                         })
                         .catch(() => {
@@ -305,8 +341,8 @@
                         console.error(err);
                     }
 
-                    // Try Cloud submit if initialized
-                    if (window.CLOUD && window.CLOUD.isReady()) {
+                    // Try Cloud submit if initialized and cloud is active
+                    if (window.CLOUD && window.CLOUD.isReady() && window.App && window.App.isCloudActive) {
                         try {
                             window.UI.showToast("Syncing Database", "Transmitting feedback to Cloud...", "info");
                             await window.CLOUD.submitFeedback(newInquiry);

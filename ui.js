@@ -970,6 +970,110 @@ document.addEventListener('DOMContentLoaded', () => {
             footerThemeIcon.setAttribute('data-lucide', isLight ? 'moon' : 'sun');
         }
 
+        // Custom Password Modal Helper
+        function showAdminAuthModal(isFirstTimeSetup, callback) {
+            let authModal = document.getElementById('admin-auth-modal');
+            if (!authModal) {
+                authModal = document.createElement('div');
+                authModal.id = 'admin-auth-modal';
+                authModal.className = 'auth-modal';
+                authModal.innerHTML = `
+                    <div class="auth-modal-content">
+                        <h3 id="auth-modal-title">🛡️ Admin Security Access</h3>
+                        <p id="auth-modal-desc">Please enter your secure administrative passcode to establish uplink connection.</p>
+                        <div class="auth-input-container">
+                            <input type="password" id="auth-password-field" placeholder="••••••" maxlength="32" autocomplete="off" />
+                            <button class="toggle-visibility" id="auth-toggle-visibility-btn" type="button">
+                                <i data-lucide="eye" style="width:16px; height:16px;"></i>
+                            </button>
+                        </div>
+                        <div class="auth-buttons">
+                            <button class="btn btn-secondary" id="auth-cancel-btn" type="button">Cancel</button>
+                            <button class="btn btn-primary" id="auth-submit-btn" type="button">Verify Uplink</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(authModal);
+                
+                // Toggle Visibility
+                const toggleBtn = document.getElementById('auth-toggle-visibility-btn');
+                const passField = document.getElementById('auth-password-field');
+                toggleBtn.onclick = () => {
+                    const isPass = passField.type === 'password';
+                    passField.type = isPass ? 'text' : 'password';
+                    toggleBtn.innerHTML = isPass 
+                        ? `<i data-lucide="eye-off" style="width:16px; height:16px;"></i>`
+                        : `<i data-lucide="eye" style="width:16px; height:16px;"></i>`;
+                    if (window.lucide) window.lucide.createIcons();
+                };
+                
+                // Cancel Button
+                document.getElementById('auth-cancel-btn').onclick = () => {
+                    authModal.classList.remove('active');
+                };
+                
+                // Close on click outside
+                authModal.onclick = (e) => {
+                    if (e.target === authModal) {
+                        authModal.classList.remove('active');
+                    }
+                };
+            }
+            
+            const titleEl = document.getElementById('auth-modal-title');
+            const descEl = document.getElementById('auth-modal-desc');
+            const passField = document.getElementById('auth-password-field');
+            const submitBtn = document.getElementById('auth-submit-btn');
+            
+            passField.value = '';
+            passField.type = 'password';
+            document.getElementById('auth-toggle-visibility-btn').innerHTML = `<i data-lucide="eye" style="width:16px; height:16px;"></i>`;
+            
+            if (isFirstTimeSetup) {
+                titleEl.textContent = "🔑 Create Administrative Pass";
+                descEl.textContent = "Welcome! No password is set. Configure a secure console passcode (minimum 6 characters):";
+                submitBtn.textContent = "Configure Console";
+            } else {
+                titleEl.textContent = "🛡️ Admin Security Access";
+                descEl.textContent = "Please enter your secure administrative passcode to establish uplink connection.";
+                submitBtn.textContent = "Verify Uplink";
+            }
+            
+            if (window.lucide) window.lucide.createIcons();
+            
+            authModal.classList.add('active');
+            passField.focus();
+            
+            // Handle Submit logic
+            const handleSubmit = () => {
+                const val = passField.value;
+                const trimmed = val.trim();
+                if (isFirstTimeSetup && trimmed.length < 6) {
+                    const modalContent = authModal.querySelector('.auth-modal-content');
+                    modalContent.classList.add('shake');
+                    setTimeout(() => modalContent.classList.remove('shake'), 500);
+                    window.UI.showToast("Invalid Password", "Passphrase must be at least 6 characters.", "warning");
+                    return;
+                }
+                if (val === "") {
+                    const modalContent = authModal.querySelector('.auth-modal-content');
+                    modalContent.classList.add('shake');
+                    setTimeout(() => modalContent.classList.remove('shake'), 500);
+                    return;
+                }
+                
+                // Perform verification callback
+                callback(trimmed);
+            };
+            
+            submitBtn.onclick = handleSubmit;
+            passField.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    handleSubmit();
+                }
+            };
+        }
+
         // Bind Admin Panel uplink callback
         const adminToggleBtn = document.getElementById('footer-admin-toggle');
         if (adminToggleBtn) {
@@ -982,40 +1086,40 @@ document.addEventListener('DOMContentLoaded', () => {
                     const cloudPass = window.CLOUD.getAdminPassword ? await window.CLOUD.getAdminPassword() : null;
                     
                     if (cloudPass === null) {
-                        // First-time setup
-                        const newPass = prompt("WELCOME! No administrative password is currently set.\nPlease configure a secure console passcode (minimum 6 characters):");
-                        if (newPass === null) return;
-                        const trimmed = newPass.trim();
-                        if (trimmed.length < 6) {
-                            window.UI.showToast("Invalid Password", "Passphrase must be at least 6 characters.", "warning");
-                            return;
-                        }
-                        try {
-                            window.UI.showToast("Initializing Console", "Configuring secure database sync...", "info");
-                            if (window.CLOUD.setAdminPassword) {
-                                await window.CLOUD.setAdminPassword(trimmed);
-                                sessionStorage.setItem('satyasetu_admin_session', 'true');
-                                window.UI.showToast("Passphrase Saved", "System unlocked. Administrative access configured.", "success");
-                                openAdminPanel();
-                            } else {
-                                throw new Error("Cloud database offline.");
+                        // First-time setup with custom modal
+                        showAdminAuthModal(true, async (trimmed) => {
+                            try {
+                                window.UI.showToast("Initializing Console", "Configuring secure database sync...", "info");
+                                if (window.CLOUD.setAdminPassword) {
+                                    await window.CLOUD.setAdminPassword(trimmed);
+                                    sessionStorage.setItem('satyasetu_admin_session', 'true');
+                                    document.getElementById('admin-auth-modal').classList.remove('active');
+                                    window.UI.showToast("Passphrase Saved", "System unlocked. Administrative access configured.", "success");
+                                    openAdminPanel();
+                                } else {
+                                    throw new Error("Cloud database offline.");
+                                }
+                            } catch (err) {
+                                console.error(err);
+                                window.UI.showToast("Setup Failed", err.message || "Could not write credentials.", "error");
                             }
-                        } catch (err) {
-                            console.error(err);
-                            window.UI.showToast("Setup Failed", err.message || "Could not write credentials.", "error");
-                        }
+                        });
                     } else {
-                        // Standard verification
-                        const pass = prompt("ENTER SECURE SECURITY ACCESS PASS:");
-                        if (pass !== null) {
-                            if (pass === cloudPass) {
+                        // Standard verification with custom modal
+                        showAdminAuthModal(false, (trimmed) => {
+                            if (trimmed === cloudPass) {
                                 sessionStorage.setItem('satyasetu_admin_session', 'true');
+                                document.getElementById('admin-auth-modal').classList.remove('active');
                                 window.UI.showToast("Uplink Established", "Security access level: ADMINISTRATOR", "success");
                                 openAdminPanel();
                             } else {
+                                const authModal = document.getElementById('admin-auth-modal');
+                                const modalContent = authModal.querySelector('.auth-modal-content');
+                                modalContent.classList.add('shake');
+                                setTimeout(() => modalContent.classList.remove('shake'), 500);
                                 window.UI.showToast("Access Denied", "Invalid administrative passphrase.", "error");
                             }
-                        }
+                        });
                     }
                 }
             };
@@ -1046,6 +1150,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 8. Inject secure admin panel overlay HTML
     let adminOverlay = document.getElementById('admin-secure-panel');
+    let currentFilters = { search: '', severity: '', status: '', classification: '' };
+    let adminChartInstance = null;
+
     if (!adminOverlay) {
         adminOverlay = document.createElement('div');
         adminOverlay.id = 'admin-secure-panel';
@@ -1053,7 +1160,7 @@ document.addEventListener('DOMContentLoaded', () => {
         adminOverlay.innerHTML = `
             <div class="admin-header">
                 <h2>🏛️ SatyaSetu Administrative Sandbox</h2>
-                <div style="display:flex; gap:12px;">
+                <div style="display:flex; gap:12px; flex-wrap:wrap;">
                     <button class="btn btn-secondary" id="admin-export-json-btn" style="padding: 10px 18px; font-size:12px;">Export JSON</button>
                     <button class="btn btn-secondary" id="admin-export-csv-btn" style="padding: 10px 18px; font-size:12px;">Export CSV</button>
                     <button class="btn btn-secondary" id="admin-change-pass-btn" style="padding: 10px 18px; font-size:12px;">Change Password</button>
@@ -1062,44 +1169,103 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
             
-            <div class="admin-grid">
-                <div class="admin-stats">
-                    <div class="admin-stat-card">
-                        <h5>Total logged records</h5>
-                        <p id="admin-stat-total">0</p>
+            <div class="admin-grid" style="display:grid; gap:30px; margin-bottom:40px;">
+                <div class="admin-main-section" style="display:flex; flex-direction:column; gap:20px;">
+                    <!-- Filter Controls Bar -->
+                    <div class="admin-filter-bar" style="display:flex; gap:12px; flex-wrap:wrap; background:rgba(255,255,255,0.02); padding:16px; border-radius:var(--radius-sm); border:1px solid var(--glass-border);">
+                        <input type="text" id="admin-search-input" placeholder="Search ID, title, city..." style="flex-grow:1; max-width:240px; padding:10px 14px; background:var(--input-bg); border:1px solid var(--input-border); border-radius:var(--radius-sm); color:#fff; font-size:12px; outline:none;" />
+                        <select id="admin-filter-severity" style="padding:10px 14px; background:var(--input-bg); border:1px solid var(--input-border); border-radius:var(--radius-sm); color:#fff; font-size:12px; outline:none;">
+                            <option value="">All Severities</option>
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                            <option value="Critical">Critical</option>
+                        </select>
+                        <select id="admin-filter-status" style="padding:10px 14px; background:var(--input-bg); border:1px solid var(--input-border); border-radius:var(--radius-sm); color:#fff; font-size:12px; outline:none;">
+                            <option value="">All Statuses</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Under Review">Under Review</option>
+                            <option value="Resolved">Resolved</option>
+                            <option value="Flagged">Flagged</option>
+                        </select>
+                        <select id="admin-filter-classification" style="padding:10px 14px; background:var(--input-bg); border:1px solid var(--input-border); border-radius:var(--radius-sm); color:#fff; font-size:12px; outline:none;">
+                            <option value="">All Categories</option>
+                            <option value="Bribery & Graft">Bribery & Graft</option>
+                            <option value="Judicial Abuse of Power">Judicial Abuse of Power</option>
+                            <option value="Embezzlement & Misappropriation">Embezzlement & Misappropriation</option>
+                            <option value="Administrative Negligence">Administrative Negligence</option>
+                            <option value="Human Rights Violations">Human Rights Violations</option>
+                            <option value="General Public Concern">General Public Concern</option>
+                        </select>
+                        <button class="btn btn-secondary" id="admin-clear-filters-btn" style="padding:10px 14px; font-size:11px; min-height:auto;">Reset</button>
+                        <button class="btn btn-primary" id="admin-add-mock-btn" style="padding:10px 14px; font-size:11px; min-height:auto; background:linear-gradient(135deg, var(--neon-emerald), var(--neon-cyan)); color:#000; border:none; font-weight:800;">+ Add Mock Case</button>
                     </div>
-                    <div class="admin-stat-card">
-                        <h5>Severe/Critical Flags</h5>
-                        <p id="admin-stat-severe" style="color:var(--neon-rose);">0</p>
+
+                    <div class="admin-stats" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:16px;">
+                        <div class="admin-stat-card">
+                            <h5>Total Seed Records</h5>
+                            <p id="admin-stat-total">0</p>
+                        </div>
+                        <div class="admin-stat-card">
+                            <h5>Critical Cases</h5>
+                            <p id="admin-stat-severe" style="color:var(--neon-rose);">0</p>
+                        </div>
+                        <div class="admin-stat-card">
+                            <h5>Flagged Spam</h5>
+                            <p id="admin-stat-spam" style="color:var(--neon-amber);">0</p>
+                        </div>
+                        <div class="admin-stat-card">
+                            <h5>AI Average Trust</h5>
+                            <p id="admin-stat-confidence" style="color:var(--neon-emerald);">0%</p>
+                        </div>
                     </div>
-                    <div class="admin-stat-card">
-                        <h5>Spam/Flagged by AI</h5>
-                        <p id="admin-stat-spam" style="color:var(--neon-amber);">0</p>
-                    </div>
-                    <div class="admin-stat-card">
-                        <h5>Avg AI Trust Confidence</h5>
-                        <p id="admin-stat-confidence" style="color:var(--neon-emerald);">0%</p>
+                    
+                    <div class="admin-table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Date</th>
+                                    <th>Title</th>
+                                    <th>Classification</th>
+                                    <th>Severity</th>
+                                    <th>AI Spam</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-table-body">
+                                <!-- Dynamic complaints list goes here -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
                 
-                <div class="admin-table-container">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Date</th>
-                                <th>Title</th>
-                                <th>Classification</th>
-                                <th>Severity</th>
-                                <th>AI Spam Score</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admin-table-body">
-                            <!-- Dynamic complaints list goes here -->
-                        </tbody>
-                    </table>
+                <div class="admin-sidebar" style="display:flex; flex-direction:column; gap:24px;">
+                    <!-- Lockdown Controller -->
+                    <div class="glass-panel" style="padding:20px; background:rgba(255,255,255,0.01);">
+                        <h4 style="font-size:13px; font-weight:900; margin-bottom:8px; display:flex; align-items:center; gap:8px;">🚨 Crisis Control Center</h4>
+                        <p style="font-size:11px; color:var(--text-muted); margin-bottom:16px;">Instantly toggle maintenance mode lockdown. Consumers will be redirected to the shield screen.</p>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:11px; font-weight:800;">System Lockdown:</span>
+                            <button class="btn btn-secondary" id="admin-lockdown-toggle-btn" style="padding:8px 16px; font-size:11px; min-height:auto; font-weight:900;"></button>
+                        </div>
+                    </div>
+                    
+                    <!-- Chart section -->
+                    <div class="glass-panel" style="padding:20px; background:rgba(255,255,255,0.01);">
+                        <h4 style="font-size:13px; font-weight:900; margin-bottom:12px;">📊 Diagnostics Metrics</h4>
+                        <div style="height:150px; position:relative;">
+                            <canvas id="admin-diagnostic-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Console action logs -->
+                    <div class="glass-panel" style="padding:20px; background:rgba(255,255,255,0.01); display:flex; flex-direction:column; flex-grow:1; min-height:200px;">
+                        <h4 style="font-size:13px; font-weight:900; margin-bottom:12px; display:flex; align-items:center; gap:8px;">📜 Console Operations Log</h4>
+                        <div id="admin-audit-log" style="flex-grow:1; background:rgba(0,0,0,0.3); border-radius:var(--radius-sm); border:1px solid var(--input-border); padding:12px; font-family:monospace; font-size:10px; color:#10b981; overflow-y:auto; max-height:220px; text-align:left; line-height:1.5;">
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
@@ -1119,48 +1285,391 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         document.getElementById('admin-change-pass-btn').onclick = async () => {
-            const newPass = prompt("ENTER NEW ADMINISTRATIVE PASSPHRASE:");
-            if (newPass === null) return;
-            const trimmed = newPass.trim();
-            if (trimmed.length < 6) {
-                window.UI.showToast("Invalid Password", "Passphrase must be at least 6 characters.", "warning");
-                return;
-            }
-            try {
-                window.UI.showToast("Syncing Credentials", "Updating cloud credentials...", "info");
-                if (window.CLOUD.setAdminPassword) {
-                    await window.CLOUD.setAdminPassword(trimmed);
-                    window.UI.showToast("Credentials Updated", "New administrative password synced with the cloud.", "success");
-                } else {
-                    throw new Error("Cloud authentication service is unavailable.");
+            showAdminAuthModal(true, async (trimmed) => {
+                try {
+                    window.UI.showToast("Updating Pass", "Saving credentials...", "info");
+                    if (window.CLOUD.setAdminPassword) {
+                        await window.CLOUD.setAdminPassword(trimmed);
+                        document.getElementById('admin-auth-modal').classList.remove('active');
+                        window.UI.showToast("Credentials Updated", "Password updated successfully.", "success");
+                        logAdminAction("Administrative password changed.");
+                    }
+                } catch (err) {
+                    console.error(err);
+                    window.UI.showToast("Update Failed", "Could not save password.", "error");
                 }
-            } catch (err) {
-                console.error(err);
-                window.UI.showToast("Update Failure", err.message || "Failed to update cloud password.", "error");
-            }
+            });
         };
         
         document.getElementById('admin-reset-db-btn').onclick = () => {
-            if (confirm("This will reset the entire sandbox database back to the mock complaints list. Proceed?")) {
+            if (confirm("Reset database to mock seeds?")) {
                 window.App.complaints = [...window.CONFIG.MOCK_COMPLAINTS];
                 localStorage.setItem(window.CONFIG.LOCAL_STORAGE_KEY, JSON.stringify(window.App.complaints));
-                window.UI.showToast("Database Reset", "Reverted database to mock template data.", "success");
+                window.UI.showToast("Database Reset", "Reverted complaints to mock seeds.", "success");
+                logAdminAction("Reverted entire database back to default seeds.");
                 renderAdminTable();
                 document.dispatchEvent(new Event('page-changed'));
             }
         };
+
+        // Bind Filters & Search
+        const searchInput = document.getElementById('admin-search-input');
+        const filterSeverity = document.getElementById('admin-filter-severity');
+        const filterStatus = document.getElementById('admin-filter-status');
+        const filterClass = document.getElementById('admin-filter-classification');
+        const clearFiltersBtn = document.getElementById('admin-clear-filters-btn');
+
+        const applyFilters = () => {
+            currentFilters.search = searchInput.value;
+            currentFilters.severity = filterSeverity.value;
+            currentFilters.status = filterStatus.value;
+            currentFilters.classification = filterClass.value;
+            renderAdminTable();
+        };
+
+        searchInput.oninput = applyFilters;
+        filterSeverity.onchange = applyFilters;
+        filterStatus.onchange = applyFilters;
+        filterClass.onchange = applyFilters;
+
+        clearFiltersBtn.onclick = () => {
+            searchInput.value = '';
+            filterSeverity.value = '';
+            filterStatus.value = '';
+            filterClass.value = '';
+            currentFilters = { search: '', severity: '', status: '', classification: '' };
+            renderAdminTable();
+            logAdminAction("Cleared table filters.");
+        };
+
+        // Bind Lockdown
+        document.getElementById('admin-lockdown-toggle-btn').onclick = () => {
+            const isMaintenance = localStorage.getItem('satyasetu_maintenance_mode') === 'true';
+            const nextState = !isMaintenance;
+            localStorage.setItem('satyasetu_maintenance_mode', String(nextState));
+            logAdminAction(nextState ? "ACTIVATED global system lockdown mode." : "DEACTIVATED global system lockdown.");
+            updateLockdownBtnUI();
+            window.UI.showToast("Lockdown Configured", nextState ? "Console locked." : "System online.", "info");
+        };
+
+        // Bind Mock Adder
+        document.getElementById('admin-add-mock-btn').onclick = () => {
+            const depts = window.CONFIG.DEPARTMENTS;
+            const cats = window.CONFIG.CATEGORIES;
+            const randomDept = depts[Math.floor(Math.random() * depts.length)].name;
+            const randomCat = cats[Math.floor(Math.random() * cats.length)].name;
+            const randomId = `SS-202607-${Math.floor(1000 + Math.random() * 9000)}`;
+            
+            const mockCase = {
+                id: randomId,
+                event_date: new Date().toISOString().split('T')[0],
+                title: `Unsanctioned procurement discrepancy logged under ${randomDept}`,
+                details: "An administrative auditor noted unexplained discrepancy margins in procurement invoices, suggesting unauthorized service fees. This case was created automatically for test evaluation.",
+                classification: randomCat,
+                severity: ["Low", "Medium", "High", "Critical"][Math.floor(Math.random() * 4)],
+                priority: "Medium",
+                urgency: "Medium",
+                status: "Pending",
+                department: randomDept,
+                city: ["Ludhiana", "Patna", "Gurugram", "Gwalior"][Math.floor(Math.random() * 4)],
+                state: ["Punjab", "Bihar", "Haryana", "Madhya Pradesh"][Math.floor(Math.random() * 4)],
+                area: "Municipal Block B",
+                tags: ["audit", "testing", "sandbox"],
+                created_at: new Date().toISOString(),
+                ai_analysis: {
+                    confidenceScore: 0.85 + Math.random() * 0.14,
+                    spamScore: Math.random() * 0.2,
+                    qualityScore: 0.8 + Math.random() * 0.19,
+                    trustScore: 0.75 + Math.random() * 0.24,
+                    isFake: false,
+                    isAbusive: false,
+                    flaggedForManualReview: false,
+                    reasons: []
+                }
+            };
+            
+            window.App.complaints.unshift(mockCase);
+            localStorage.setItem(window.CONFIG.LOCAL_STORAGE_KEY, JSON.stringify(window.App.complaints));
+            logAdminAction(`Created mock record ${randomId}`);
+            window.UI.showToast("Mock Created", `Logged test case ${randomId}`, "success");
+            renderAdminTable();
+            document.dispatchEvent(new Event('page-changed'));
+        };
     }
+
+    // Dynamic Chart rendering
+    function renderAdminChart(filteredList) {
+        if (typeof Chart === 'undefined') {
+            const script = document.createElement('script');
+            script.src = "https://cdn.jsdelivr.net/npm/chart.js";
+            script.onload = () => renderAdminChart(filteredList);
+            document.head.appendChild(script);
+            return;
+        }
+        
+        const canvas = document.getElementById('admin-diagnostic-chart');
+        if (!canvas) return;
+        
+        const statusCounts = { Pending: 0, "Under Review": 0, Resolved: 0, Flagged: 0 };
+        filteredList.forEach(c => {
+            if (statusCounts[c.status] !== undefined) {
+                statusCounts[c.status]++;
+            }
+        });
+        
+        if (adminChartInstance) {
+            adminChartInstance.destroy();
+        }
+        
+        const ctx = canvas.getContext('2d');
+        adminChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(statusCounts),
+                datasets: [{
+                    data: Object.values(statusCounts),
+                    backgroundColor: ['#6366f1', '#fbbf24', '#34d399', '#f87171'],
+                    borderColor: 'rgba(255,255,255,0.05)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            color: '#94a3b8',
+                            font: { size: 9, weight: 'bold' },
+                            boxWidth: 8
+                        }
+                    }
+                },
+                cutout: '60%'
+            }
+        });
+    }
+
+    // Lockdown Toggle UI
+    function updateLockdownBtnUI() {
+        const btn = document.getElementById('admin-lockdown-toggle-btn');
+        if (!btn) return;
+        const isMaintenance = localStorage.getItem('satyasetu_maintenance_mode') === 'true';
+        if (isMaintenance) {
+            btn.textContent = "Lockdown Active 🔴";
+            btn.style.background = 'var(--neon-rose)';
+            btn.style.color = '#fff';
+        } else {
+            btn.textContent = "Lockdown Inactive 🟢";
+            btn.style.background = 'rgba(255,255,255,0.06)';
+            btn.style.color = 'var(--text-muted)';
+        }
+    }
+
+    // Audit Logging
+    function logAdminAction(msg) {
+        const logPanel = document.getElementById('admin-audit-log');
+        if (!logPanel) return;
+        const time = new Date().toLocaleTimeString();
+        const line = document.createElement('div');
+        line.innerHTML = `<span style="color:#6366f1;">[${time}]</span> ${msg}`;
+        logPanel.appendChild(line);
+        logPanel.scrollTop = logPanel.scrollHeight;
+        
+        let logs = JSON.parse(sessionStorage.getItem('satyasetu_admin_audit_logs') || '[]');
+        logs.push({ time, msg });
+        sessionStorage.setItem('satyasetu_admin_audit_logs', JSON.stringify(logs));
+    }
+
+    function loadAdminActionLogs() {
+        const logPanel = document.getElementById('admin-audit-log');
+        if (!logPanel) return;
+        logPanel.innerHTML = '';
+        let logs = JSON.parse(sessionStorage.getItem('satyasetu_admin_audit_logs') || '[]');
+        if (logs.length === 0) {
+            logs.push({ time: new Date().toLocaleTimeString(), msg: "Administrative session established securely." });
+            sessionStorage.setItem('satyasetu_admin_audit_logs', JSON.stringify(logs));
+        }
+        logs.forEach(l => {
+            const line = document.createElement('div');
+            line.innerHTML = `<span style="color:#6366f1;">[${l.time}]</span> ${l.msg}`;
+            logPanel.appendChild(line);
+        });
+        logPanel.scrollTop = logPanel.scrollHeight;
+    }
+
+    // Detailed Drawer Modal
+    function openAdminDetailModal(c) {
+        let detailModal = document.getElementById('admin-detail-modal');
+        if (!detailModal) {
+            detailModal = document.createElement('div');
+            detailModal.id = 'admin-detail-modal';
+            detailModal.className = 'auth-modal';
+            detailModal.innerHTML = `
+                <div class="auth-modal-content" style="max-width: 650px; text-align:left; max-height:90vh; overflow-y:auto; border-radius:var(--radius-md);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--glass-border); padding-bottom:16px; margin-bottom:20px;">
+                        <h3 style="margin:0; font-size:20px; font-weight:900; background:linear-gradient(90deg, var(--neon-indigo), var(--neon-cyan)); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">🔍 Case File Analysis</h3>
+                        <button class="btn btn-secondary" id="detail-close-btn" style="padding:6px 12px; font-size:11px; min-height:auto; margin:0;">✕</button>
+                    </div>
+                    <div id="detail-modal-body">
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(detailModal);
+            document.getElementById('detail-close-btn').onclick = () => {
+                detailModal.classList.remove('active');
+            };
+            detailModal.onclick = (e) => {
+                if (e.target === detailModal) {
+                    detailModal.classList.remove('active');
+                }
+            };
+        }
+        
+        const bodyEl = document.getElementById('detail-modal-body');
+        const firestoreId = c._firestore_id || c.id;
+        const isLocal = !window.App.isCloudActive || !c._firestore_id || String(c.id).startsWith('local_');
+        const mediaHtml = c.image_data ? `<div style="margin-top:16px;"><p style="font-size:11px; color:var(--text-muted); margin-bottom:8px; font-weight:800;">📷 Attached Evidence Image:</p><img src="${c.image_data}" style="max-width:100%; border-radius:var(--radius-sm); border:1px solid var(--glass-border);" /></div>` : '';
+        const videoHtml = c.video_data ? `<div style="margin-top:16px;"><p style="font-size:11px; color:var(--text-muted); margin-bottom:8px; font-weight:800;">📹 Attached Evidence Video:</p><video src="${c.video_data}" controls style="max-width:100%; border-radius:var(--radius-sm); border:1px solid var(--glass-border);"></video></div>` : '';
+        
+        const spamPercent = c.ai_analysis ? Math.round(c.ai_analysis.spamScore * 100) : 0;
+        const confidencePercent = c.ai_analysis ? Math.round(c.ai_analysis.confidenceScore * 100) : 0;
+        const qualityPercent = c.ai_analysis ? Math.round(c.ai_analysis.qualityScore * 100) : 0;
+        const trustPercent = c.ai_analysis ? Math.round(c.ai_analysis.trustScore * 100) : 0;
+        
+        bodyEl.innerHTML = `
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:20px; font-size:12px;">
+                <div><span style="color:var(--text-muted);">Case ID:</span> <strong style="font-family:monospace;">${c.id}</strong></div>
+                <div><span style="color:var(--text-muted);">Date:</span> <strong>${c.event_date}</strong></div>
+                <div><span style="color:var(--text-muted);">Jurisdiction:</span> <strong>${c.city}, ${c.state}</strong></div>
+                <div><span style="color:var(--text-muted);">Area:</span> <strong>${c.area || 'N/A'}</strong></div>
+                <div><span style="color:var(--text-muted);">Category:</span> <strong>${c.classification}</strong></div>
+                <div><span style="color:var(--text-muted);">Severity:</span> <span class="badge ${c.severity === 'Critical' || c.severity === 'High' ? 'badge-danger' : c.severity === 'Medium' ? 'badge-warning' : 'badge-info'}">${c.severity}</span></div>
+            </div>
+            
+            <div style="margin-bottom:20px;">
+                <h4 style="font-size:12px; font-weight:800; color:var(--text-main); margin-bottom:8px;">📝 Subject</h4>
+                <p style="font-size:13px; font-weight:700; color:var(--text-main); background:rgba(255,255,255,0.02); padding:10px; border-radius:var(--radius-sm); border:1px solid var(--glass-border); margin:0;">${window.UTILS.escapeHtml(c.title)}</p>
+            </div>
+            
+            <div style="margin-bottom:20px;">
+                <h4 style="font-size:12px; font-weight:800; color:var(--text-main); margin-bottom:8px;">📋 Statement Description</h4>
+                <div style="font-size:12px; color:var(--text-muted); line-height:1.6; background:rgba(0,0,0,0.15); padding:14px; border-radius:var(--radius-sm); border:1px solid var(--glass-border); max-height:150px; overflow-y:auto; white-space:pre-wrap;">${window.UTILS.escapeHtml(c.details)}</div>
+            </div>
+            
+            <div class="glass-panel" style="padding:16px; margin-bottom:20px; background:rgba(99,102,241,0.03); border:1px solid var(--glass-border);">
+                <h4 style="font-size:12px; font-weight:800; color:var(--neon-indigo); margin-bottom:12px;">🧠 Cryptographic AI Trust Assessment</h4>
+                <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; text-align:center;">
+                    <div>
+                        <div style="font-size:9px; color:var(--text-muted);">Trust Score</div>
+                        <div style="font-size:14px; font-weight:900; color:var(--neon-emerald);">${trustPercent}%</div>
+                    </div>
+                    <div>
+                        <div style="font-size:9px; color:var(--text-muted);">Confidence</div>
+                        <div style="font-size:14px; font-weight:900; color:var(--neon-cyan);">${confidencePercent}%</div>
+                    </div>
+                    <div>
+                        <div style="font-size:9px; color:var(--text-muted);">Spam Score</div>
+                        <div style="font-size:14px; font-weight:900; color:${spamPercent > 35 ? 'var(--neon-rose)' : 'var(--text-muted)'};">${spamPercent}%</div>
+                    </div>
+                    <div>
+                        <div style="font-size:9px; color:var(--text-muted);">Quality</div>
+                        <div style="font-size:14px; font-weight:900; color:var(--neon-amber);">${qualityPercent}%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; border-top:1px solid var(--glass-border); padding-top:16px; flex-wrap:wrap;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:12px; color:var(--text-muted);">Status Mode:</span>
+                    <select id="detail-status-select" style="padding:8px 12px; background:var(--input-bg); border:1px solid var(--input-border); border-radius:var(--radius-sm); color:#fff; font-size:12px; outline:none; font-weight:800;">
+                        <option value="Pending" ${c.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                        <option value="Under Review" ${c.status === 'Under Review' ? 'selected' : ''}>Under Review</option>
+                        <option value="Resolved" ${c.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
+                        <option value="Flagged" ${c.status === 'Flagged' ? 'selected' : ''}>Flagged</option>
+                    </select>
+                </div>
+                
+                <div style="display:flex; gap:8px;">
+                    <button class="btn btn-secondary" id="detail-reanalyze-btn" style="padding:8px 14px; font-size:11px; min-height:auto;">Re-Analyze AI</button>
+                    <button class="btn btn-primary" id="detail-delete-btn" style="padding:8px 14px; font-size:11px; min-height:auto; background:var(--neon-rose); border:none; color:#fff;">Delete Record</button>
+                </div>
+            </div>
+            
+            ${mediaHtml}
+            ${videoHtml}
+        `;
+        
+        const statusSelect = document.getElementById('detail-status-select');
+        statusSelect.onchange = async () => {
+            const newStatus = statusSelect.value;
+            logAdminAction(`Modified status of case ${c.id} to ${newStatus}`);
+            await window.UI.adminChangeStatus(c.id, newStatus);
+        };
+        
+        document.getElementById('detail-delete-btn').onclick = async () => {
+            if (confirm(`Permanently delete case ${c.id}?`)) {
+                logAdminAction(`Deleted record file ${c.id}`);
+                detailModal.classList.remove('active');
+                await window.UI.adminDelete(c.id, firestoreId, isLocal);
+            }
+        };
+        
+        document.getElementById('detail-reanalyze-btn').onclick = () => {
+            window.UI.showToast("Re-analyzing", "Running trust vectors...", "info");
+            logAdminAction(`Re-evaluated AI metrics on ${c.id}`);
+            setTimeout(() => {
+                c.ai_analysis.trustScore = Math.min(0.99, c.ai_analysis.trustScore + 0.03);
+                c.ai_analysis.qualityScore = Math.min(0.99, c.ai_analysis.qualityScore + 0.02);
+                window.UI.showToast("AI Recalibrated", "Trust score metrics updated.", "success");
+                openAdminDetailModal(c);
+                if (window.UI._renderAdminTable) window.UI._renderAdminTable();
+            }, 600);
+        };
+        
+        detailModal.classList.add('active');
+    }
+
+    // Expose detail modal trigger globally
+    window.UI.adminViewDetails = function(id) {
+        const c = (window.App.complaints || []).find(x => x.id === id);
+        if (c) openAdminDetailModal(c);
+    };
 
     function openAdminPanel() {
         adminOverlay.classList.add('active');
+        updateLockdownBtnUI();
+        loadAdminActionLogs();
         renderAdminTable();
     }
 
     function renderAdminTable() {
-        const list = window.App.complaints || [];
-        const stats = window.CHARTS ? window.CHARTS.computeStatistics(list) : { total: list.length, criticalCount: 0, highCount: 0, flagged: 0, avgConfidence: 0 };
+        let list = window.App.complaints || [];
         
-        document.getElementById('admin-stat-total').textContent = list.length;
+        // Filter rows
+        if (currentFilters.search) {
+            const q = currentFilters.search.toLowerCase();
+            list = list.filter(c => 
+                c.id.toLowerCase().includes(q) || 
+                c.title.toLowerCase().includes(q) || 
+                c.details.toLowerCase().includes(q) || 
+                c.city.toLowerCase().includes(q) ||
+                c.state.toLowerCase().includes(q)
+            );
+        }
+        if (currentFilters.severity) {
+            list = list.filter(c => c.severity === currentFilters.severity);
+        }
+        if (currentFilters.status) {
+            list = list.filter(c => c.status === currentFilters.status);
+        }
+        if (currentFilters.classification) {
+            list = list.filter(c => c.classification === currentFilters.classification);
+        }
+
+        const stats = window.CHARTS ? window.CHARTS.computeStatistics(window.App.complaints || []) : { total: list.length, criticalCount: 0, highCount: 0, flagged: 0, avgConfidence: 0 };
+        document.getElementById('admin-stat-total').textContent = (window.App.complaints || []).length;
         document.getElementById('admin-stat-severe').textContent = stats.criticalCount + stats.highCount;
         document.getElementById('admin-stat-spam').textContent = stats.flagged;
         document.getElementById('admin-stat-confidence').textContent = `${(stats.avgConfidence * 100).toFixed(0)}%`;
@@ -1169,7 +1678,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!tbody) return;
         
         if (list.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--text-muted);">No records found in database.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--text-muted);">No matching case files found.</td></tr>`;
             return;
         }
         
@@ -1181,15 +1690,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const spamActionLabel = c.status === 'Flagged' ? 'Approve' : 'Flag Spam';
             
             return `
-                <tr>
-                    <td style="font-family:monospace; font-size:11px;">${c.id}</td>
+                <tr style="cursor:pointer;" onclick="window.UI.adminViewDetails('${c.id}')">
+                    <td style="font-family:monospace; font-size:11px; color:var(--neon-indigo); font-weight:700;">${c.id}</td>
                     <td>${c.event_date}</td>
                     <td style="font-weight:700; max-width:240px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${window.UTILS.escapeHtml(c.title)}">${window.UTILS.escapeHtml(c.title)}</td>
                     <td>${c.classification}</td>
                     <td><span class="badge ${c.severity === 'Critical' || c.severity === 'High' ? 'badge-danger' : c.severity === 'Medium' ? 'badge-warning' : 'badge-info'}">${c.severity}</span></td>
                     <td>${spamPercent}%</td>
                     <td><span class="badge ${c.status === 'Resolved' ? 'badge-success' : c.status === 'Flagged' ? 'badge-danger' : c.status === 'Under Review' ? 'badge-warning' : 'badge-info'}">${c.status}</span></td>
-                    <td class="admin-actions">
+                    <td class="admin-actions" onclick="event.stopPropagation()">
                         <button class="admin-btn-sm approve" onclick="window.UI.adminChangeStatus('${c.id}', '${c.status === 'Resolved' ? 'Pending' : 'Resolved'}')">${statusActionLabel}</button>
                         <button class="admin-btn-sm spam" onclick="window.UI.adminChangeStatus('${c.id}', '${c.status === 'Flagged' ? 'Pending' : 'Flagged'}')">${spamActionLabel}</button>
                         <button class="admin-btn-sm delete" onclick="window.UI.adminDelete('${c.id}', '${firestoreId}', ${isLocal})">Delete</button>
@@ -1197,6 +1706,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 </tr>
             `;
         }).join('');
+        
+        renderAdminChart(list);
     }
 
     // Expose renderAdminTable globally

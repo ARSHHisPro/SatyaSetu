@@ -202,8 +202,8 @@ function setupRealtimeSync() {
             renderActivePage();
         },
         (error) => {
-            console.error(error);
-            window.UI.showToast("Database Sync Error", "Could not sync cloud data. Loading local data.", "warning");
+            console.warn("Firestore sync unavailable, operating in local fallback mode:", error);
+            handleCloudDisconnected();
             loadLocalComplaints();
             renderActivePage();
         }

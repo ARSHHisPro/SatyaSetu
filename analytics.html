@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -36,7 +36,7 @@
                 <span class="sdg-badge">SDG 16</span>
             </a>
 
-                                                <nav class="desktop-nav">
+            <nav class="desktop-nav">
                 <a href="index.html" class="nav-link" data-translate="home">Home</a>
                 <a href="report.html" class="nav-link" data-translate="register">Register Complaint</a>
                 <a href="about.html" class="nav-link">About</a>
@@ -68,7 +68,7 @@
             </div>
         </div>
         
-                                <div id="mobile-nav-dropdown" class="glass-panel mobile-dropdown">
+        <div id="mobile-nav-dropdown" class="glass-panel mobile-dropdown">
             <a href="index.html" class="nav-link" data-translate="home">Home</a>
             <a href="report.html" class="nav-link" data-translate="register">Register Complaint</a>
             <a href="dashboard.html" class="nav-link" data-translate="dashboard">Reports Hub</a>
@@ -85,7 +85,6 @@
 
     <main class="max-width-container">
         <section class="fade-in-el">
-            
             <div class="hero" style="margin-bottom:36px;">
                 <h2>Interactive Graphs & Trends</h2>
                 <p style="font-size:14px; margin-top:4px;">SDG Goal 16 - Peace, Justice, and Strong Institutions Performance Monitoring</p>
@@ -137,6 +136,32 @@
                 </div>
             </div>
 
+            <!-- State & City Integrity Leaderboard -->
+            <div class="glass-panel" style="padding:32px; border-radius:var(--radius-md); margin-top:20px; background:rgba(16,185,129,0.03); border:1px solid var(--glass-border);">
+                <h3 style="font-weight:900; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                    🏆 State & City Integrity Leaderboard
+                </h3>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">
+                    Ranking locations by responsiveness and resolution performance of public concerns (SDG 16 compliance metrics).
+                </p>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:24px;">
+                    <!-- States Rankings -->
+                    <div style="background:rgba(0,0,0,0.1); padding:20px; border-radius:var(--radius-sm); border:1px solid var(--glass-border);">
+                        <h4 style="font-size:13px; font-weight:800; color:var(--neon-emerald); margin-bottom:12px; border-bottom:1px solid var(--glass-border); padding-bottom:8px;">States Performance</h4>
+                        <div id="leaderboard-states" style="display:flex; flex-direction:column; gap:10px;">
+                            <!-- Dynamic state items -->
+                        </div>
+                    </div>
+                    <!-- Cities Rankings -->
+                    <div style="background:rgba(0,0,0,0.1); padding:20px; border-radius:var(--radius-sm); border:1px solid var(--glass-border);">
+                        <h4 style="font-size:13px; font-weight:800; color:var(--neon-cyan); margin-bottom:12px; border-bottom:1px solid var(--glass-border); padding-bottom:8px;">Top Cities Rankings</h4>
+                        <div id="leaderboard-cities" style="display:flex; flex-direction:column; gap:10px;">
+                            <!-- Dynamic city items -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- AI Insight Panel -->
             <div class="glass-panel" style="padding:32px; border-radius:var(--radius-md); margin-top:20px; background:rgba(99,102,241,0.04); border:1px solid var(--glass-border);">
                 <h3 style="font-weight:900; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
@@ -146,7 +171,6 @@
                     Awaiting data synchronization to generate statistical review points.
                 </div>
             </div>
-
         </section>
     </main>
 
@@ -157,7 +181,6 @@
     <footer>
         <div class="max-width-container">
             <p style="margin-bottom:4px;">SatyaSetu Civic Transparency Network — Made in alignment with SDG Goal 16.</p>
-            
         </div>
     </footer>
 

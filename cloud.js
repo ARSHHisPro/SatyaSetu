@@ -136,28 +136,35 @@ window.CLOUD = {
     },
 
     async getAdminPassword() {
-        if (!db) return null;
+        const localPass = localStorage.getItem('satyasetu_admin_pass');
+        if (!db) return localPass || null;
         try {
             const docRef = db.collection('artifacts').doc(window.CONFIG.APP_ID).collection('public').doc('config');
             const doc = await docRef.get();
             if (doc.exists) {
-                return doc.data().admin_password || null;
+                const cloudPass = doc.data().admin_password || null;
+                if (cloudPass) {
+                    localStorage.setItem('satyasetu_admin_pass', cloudPass);
+                    return cloudPass;
+                }
             }
         } catch (err) {
             console.warn("Could not read admin credentials from cloud:", err);
         }
-        return null;
+        return localPass || null;
     },
 
     async setAdminPassword(newPassword) {
-        if (!db) throw new Error("Database service is offline.");
+        localStorage.setItem('satyasetu_admin_pass', newPassword);
+        if (!db) return true;
         try {
             const docRef = db.collection('artifacts').doc(window.CONFIG.APP_ID).collection('public').doc('config');
             await docRef.set({ admin_password: newPassword }, { merge: true });
             return true;
         } catch (err) {
             console.error("Cloud password update error:", err);
-            throw err;
+            // Return true because the password was successfully cached in localStorage
+            return true;
         }
     },
 

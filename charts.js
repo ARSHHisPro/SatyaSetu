@@ -223,5 +223,118 @@ window.CHARTS = {
                 }
             });
         }
+
+        // Populate Leaderboard dynamically
+        this.populateLeaderboard(complaints);
+    },
+
+    populateLeaderboard(complaints) {
+        const stateEl = document.getElementById('leaderboard-states');
+        const cityEl = document.getElementById('leaderboard-cities');
+        if (!stateEl && !cityEl) return;
+        
+        const stateStats = {};
+        const cityStats = {};
+        
+        const defaultStates = [
+            { name: "Kerala", score: 96, status: "Excellent" },
+            { name: "Tamil Nadu", score: 89, status: "Good" },
+            { name: "Karnataka", score: 82, status: "Good" },
+            { name: "Maharashtra", score: 75, status: "Moderate" },
+            { name: "Delhi", score: 68, status: "Needs Improvement" }
+        ];
+        const defaultCities = [
+            { name: "Thiruvananthapuram", score: 97, status: "Excellent" },
+            { name: "Bengaluru", score: 86, status: "Good" },
+            { name: "Chennai", score: 83, status: "Good" },
+            { name: "Mumbai", score: 78, status: "Moderate" },
+            { name: "New Delhi", score: 69, status: "Needs Improvement" }
+        ];
+        
+        if (complaints && complaints.length > 0) {
+            complaints.forEach(c => {
+                const state = c.state || 'Other';
+                const city = c.city || 'Other';
+                
+                if (!stateStats[state]) stateStats[state] = { total: 0, resolved: 0, critical: 0, trustSum: 0 };
+                if (!cityStats[city]) cityStats[city] = { total: 0, resolved: 0, critical: 0, trustSum: 0 };
+                
+                stateStats[state].total++;
+                cityStats[city].total++;
+                
+                if (c.status === 'Resolved') {
+                    stateStats[state].resolved++;
+                    cityStats[city].resolved++;
+                }
+                if (c.severity === 'Critical' || c.severity === 'High') {
+                    stateStats[state].critical++;
+                    cityStats[city].critical++;
+                }
+                
+                const tScore = c.ai_analysis ? c.ai_analysis.trustScore : 0.8;
+                stateStats[state].trustSum += tScore;
+                cityStats[city].trustSum += tScore;
+            });
+            
+            const computeList = (statsMap) => {
+                return Object.keys(statsMap).map(name => {
+                    const s = statsMap[name];
+                    const avgTrust = s.trustSum / s.total;
+                    let score = Math.round(85 + (s.resolved / s.total) * 15 - (s.critical / s.total) * 20 + (avgTrust - 0.8) * 10 - Math.min(5, s.total * 0.5));
+                    score = Math.max(10, Math.min(100, score));
+                    
+                    let status = "Moderate";
+                    if (score >= 90) status = "Excellent";
+                    else if (score >= 80) status = "Good";
+                    else if (score >= 60) status = "Moderate";
+                    else status = "Needs Improvement";
+                    
+                    return { name, score, status };
+                }).sort((a, b) => b.score - a.score);
+            };
+            
+            const statesList = computeList(stateStats);
+            const citiesList = computeList(cityStats);
+            
+            const mergeRankings = (computed, defaults) => {
+                const uniqueNames = new Set(computed.map(x => x.name));
+                const final = [...computed];
+                defaults.forEach(d => {
+                    if (!uniqueNames.has(d.name) && d.name !== 'Other') {
+                        final.push(d);
+                    }
+                });
+                return final.sort((a, b) => b.score - a.score).slice(0, 5);
+            };
+            
+            const finalStates = mergeRankings(statesList, defaultStates);
+            const finalCities = mergeRankings(citiesList, defaultCities);
+            
+            this.renderLeaderboardHtml(stateEl, finalStates, "emerald");
+            this.renderLeaderboardHtml(cityEl, finalCities, "cyan");
+        } else {
+            this.renderLeaderboardHtml(stateEl, defaultStates, "emerald");
+            this.renderLeaderboardHtml(cityEl, defaultCities, "cyan");
+        }
+    },
+
+    renderLeaderboardHtml(element, list, accentColor) {
+        if (!element) return;
+        element.innerHTML = list.map((item, idx) => {
+            const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : "🔹";
+            const badgeClass = item.status === "Excellent" ? "badge-success" : item.status === "Good" ? "badge-info" : item.status === "Moderate" ? "badge-warning" : "badge-danger";
+            return `
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.03);">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:14px; width:20px;">${medal}</span>
+                        <strong style="color:var(--text-main);">${item.name}</strong>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <span class="badge ${badgeClass}" style="font-size:9px; padding:2px 6px;">${item.status}</span>
+                        <strong style="color:var(--neon-${accentColor}); width:36px; text-align:right;">${item.score}%</strong>
+                    </div>
+                </div>
+            `;
+        }).join('');
     }
 };
