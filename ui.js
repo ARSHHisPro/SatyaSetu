@@ -1,5 +1,120 @@
 // Satyasetu - UI Controller, Modals, Forms & Drag-and-Drop Management (Global Namespace)
 
+// Web Audio API Sound Effects Synthesizer Engine
+window.SOUNDS = {
+    _ctx: null,
+    _init() {
+        if (!this._ctx) {
+            this._ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    },
+    playClick() {
+        try {
+            this._init();
+            if (this._ctx.state === 'suspended') this._ctx.resume();
+            const osc = this._ctx.createOscillator();
+            const gain = this._ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this._ctx.destination);
+            
+            osc.frequency.setValueAtTime(600, this._ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(150, this._ctx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.08, this._ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this._ctx.currentTime + 0.1);
+            
+            osc.start();
+            osc.stop(this._ctx.currentTime + 0.1);
+        } catch(e) {}
+    },
+    playSuccess() {
+        try {
+            this._init();
+            if (this._ctx.state === 'suspended') this._ctx.resume();
+            const now = this._ctx.currentTime;
+            const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+            notes.forEach((freq, idx) => {
+                const osc = this._ctx.createOscillator();
+                const gain = this._ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this._ctx.destination);
+                
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.08, now + idx * 0.08 + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.4);
+                
+                osc.start(now + idx * 0.08);
+                osc.stop(now + idx * 0.08 + 0.4);
+            });
+        } catch(e) {}
+    },
+    playAlert() {
+        try {
+            this._init();
+            if (this._ctx.state === 'suspended') this._ctx.resume();
+            const osc = this._ctx.createOscillator();
+            const gain = this._ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this._ctx.destination);
+            
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, this._ctx.currentTime);
+            osc.frequency.linearRampToValueAtTime(80, this._ctx.currentTime + 0.25);
+            gain.gain.setValueAtTime(0.12, this._ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this._ctx.currentTime + 0.25);
+            
+            osc.start();
+            osc.stop(this._ctx.currentTime + 0.25);
+        } catch(e) {}
+    },
+    playConsoleBeep() {
+        try {
+            this._init();
+            if (this._ctx.state === 'suspended') this._ctx.resume();
+            const osc = this._ctx.createOscillator();
+            const gain = this._ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this._ctx.destination);
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, this._ctx.currentTime);
+            gain.gain.setValueAtTime(0.04, this._ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this._ctx.currentTime + 0.12);
+            
+            osc.start();
+            osc.stop(this._ctx.currentTime + 0.12);
+        } catch(e) {}
+    },
+    playSiren() {
+        try {
+            this._init();
+            if (this._ctx.state === 'suspended') this._ctx.resume();
+            const now = this._ctx.currentTime;
+            
+            for (let i = 0; i < 2; i++) {
+                const start = now + i * 0.6;
+                const osc = this._ctx.createOscillator();
+                const gain = this._ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this._ctx.destination);
+                
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(350, start);
+                osc.frequency.linearRampToValueAtTime(700, start + 0.25);
+                osc.frequency.linearRampToValueAtTime(350, start + 0.5);
+                
+                gain.gain.setValueAtTime(0, start);
+                gain.gain.linearRampToValueAtTime(0.06, start + 0.15);
+                gain.gain.exponentialRampToValueAtTime(0.001, start + 0.5);
+                
+                osc.start(start);
+                osc.stop(start + 0.5);
+            }
+        } catch(e) {}
+    }
+};
+
 let selectedImagesList = [];
 let selectedVideoBase64 = null;
 let toastContainer = null;
@@ -82,10 +197,21 @@ window.UI = {
         }
 
         let icon = "💡";
-        if (type === "success") icon = "✓";
-        else if (type === "error") icon = "❌";
-        else if (type === "warning") icon = "⚠️";
-        else if (type === "shield") icon = "🛡️";
+        if (type === "success") {
+            icon = "✓";
+            if (window.SOUNDS) window.SOUNDS.playSuccess();
+        } else if (type === "error") {
+            icon = "❌";
+            if (window.SOUNDS) window.SOUNDS.playAlert();
+        } else if (type === "warning") {
+            icon = "⚠️";
+            if (window.SOUNDS) window.SOUNDS.playAlert();
+        } else if (type === "shield") {
+            icon = "🛡️";
+            if (window.SOUNDS) window.SOUNDS.playSuccess();
+        } else {
+            if (window.SOUNDS) window.SOUNDS.playConsoleBeep();
+        }
 
         const toast = document.createElement('div');
         toast.className = 'glass-card toast';
@@ -684,6 +810,14 @@ window.UI = {
 // Satyasetu Premium Dynamic Visuals & Effects
 // -------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
+    // Global click sound effect hook
+    document.body.addEventListener('click', (e) => {
+        const target = e.target.closest('button, a, .action-btn, .nav-dropdown-btn, input[type="submit"], input[type="button"], .tab-btn');
+        if (target && window.SOUNDS) {
+            window.SOUNDS.playClick();
+        }
+    });
+
     // 0. Global Maintenance Mode Check
     const isMaintenance = localStorage.getItem('satyasetu_maintenance_mode') === 'true';
     const isControlPage = window.location.pathname.includes('fixmain.html');
@@ -1042,7 +1176,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (window.lucide) window.lucide.createIcons();
             
             authModal.classList.add('active');
+            if (window.SOUNDS) window.SOUNDS.playConsoleBeep();
             passField.focus();
+            
+            // Subtly play keyboard tap sounds when typing passcode
+            passField.oninput = () => {
+                if (window.SOUNDS) window.SOUNDS.playConsoleBeep();
+            };
             
             // Handle Submit logic
             const handleSubmit = () => {
@@ -1051,6 +1191,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (isFirstTimeSetup && trimmed.length < 6) {
                     const modalContent = authModal.querySelector('.auth-modal-content');
                     modalContent.classList.add('shake');
+                    if (window.SOUNDS) window.SOUNDS.playAlert();
                     setTimeout(() => modalContent.classList.remove('shake'), 500);
                     window.UI.showToast("Invalid Password", "Passphrase must be at least 6 characters.", "warning");
                     return;
@@ -1058,6 +1199,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (val === "") {
                     const modalContent = authModal.querySelector('.auth-modal-content');
                     modalContent.classList.add('shake');
+                    if (window.SOUNDS) window.SOUNDS.playAlert();
                     setTimeout(() => modalContent.classList.remove('shake'), 500);
                     return;
                 }
@@ -1349,6 +1491,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('satyasetu_maintenance_mode', String(nextState));
             logAdminAction(nextState ? "ACTIVATED global system lockdown mode." : "DEACTIVATED global system lockdown.");
             updateLockdownBtnUI();
+            if (nextState && window.SOUNDS) window.SOUNDS.playSiren();
             window.UI.showToast("Lockdown Configured", nextState ? "Console locked." : "System online.", "info");
         };
 
