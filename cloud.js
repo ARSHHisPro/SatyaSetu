@@ -1,4 +1,4 @@
-// Satyasetu - Cloud Integration with Offline Persistence Cache (Global compat script version)
+// Satyasetu - Cloud Integration with Realtime Database (Global compat script version)
 
 let db = null;
 let auth = null;
@@ -14,18 +14,7 @@ window.CLOUD = {
             }
 
             const app = firebase.initializeApp(window.CONFIG.CLOUD_CONFIG);
-            db = firebase.firestore(app);
-
-            try {
-                await db.enablePersistence({ synchronizeTabs: true });
-                console.log("Cloud offline buffer cache activated.");
-            } catch (err) {
-                if (err.code == 'failed-precondition') {
-                    console.warn("Multiple tabs open, persistence enabled in first tab only.");
-                } else if (err.code == 'unimplemented') {
-                    console.warn("The current browser does not support offline persistence.");
-                }
-            }
+            db = firebase.database(app);
 
             auth = firebase.auth(app);
 
@@ -38,7 +27,7 @@ window.CLOUD = {
             await auth.signInAnonymously();
             
             isInitialized = true;
-            console.log("Secure cloud synchronization protocol established.");
+            console.log("Secure cloud Realtime Database synchronization protocol established.");
             return { success: true, db, auth };
             
         } catch (err) {
@@ -52,13 +41,13 @@ window.CLOUD = {
         if (!db) throw new Error("Database service is offline.");
 
         try {
-            const complaintsCollection = db.collection('artifacts').doc(window.CONFIG.APP_ID).collection('public').doc('data').collection('complaints');
-            const docId = payload.id || complaintsCollection.doc().id;
-            await complaintsCollection.doc(docId).set({
+            const ref = db.ref('artifacts/' + window.CONFIG.APP_ID + '/public/data/complaints');
+            const docId = payload.id || ref.push().key;
+            await ref.child(docId).update({
                 ...payload,
                 id: docId,
                 updated_at: new Date().toISOString()
-            }, { merge: true });
+            });
             return { success: true, id: docId };
         } catch (err) {
             console.error("Cloud database write error:", err);
@@ -70,9 +59,9 @@ window.CLOUD = {
         if (!db) throw new Error("Database service is offline.");
 
         try {
-            const feedbacksCollection = db.collection('artifacts').doc(window.CONFIG.APP_ID).collection('public').doc('data').collection('feedbacks');
-            const docId = feedbacksCollection.doc().id;
-            await feedbacksCollection.doc(docId).set({
+            const ref = db.ref('artifacts/' + window.CONFIG.APP_ID + '/public/data/feedbacks');
+            const docId = ref.push().key;
+            await ref.child(docId).set({
                 ...payload,
                 id: docId,
                 created_at: new Date().toISOString()
@@ -91,16 +80,16 @@ window.CLOUD = {
         }
 
         try {
-            const complaintsCollection = db.collection('artifacts').doc(window.CONFIG.APP_ID).collection('public').doc('data').collection('complaints');
+            const ref = db.ref('artifacts/' + window.CONFIG.APP_ID + '/public/data/complaints');
             
-            return complaintsCollection.onSnapshot((snapshot) => {
+            const handleValue = (snapshot) => {
                 const list = [];
-                snapshot.forEach(docSnap => {
-                    const data = docSnap.data() || {};
+                snapshot.forEach(childSnap => {
+                    const data = childSnap.val() || {};
                     list.push({
                         ...data,
-                        id: data.id || docSnap.id,
-                        _firestore_id: docSnap.id
+                        id: data.id || childSnap.key,
+                        _firestore_id: childSnap.key
                     });
                 });
                 
@@ -111,10 +100,14 @@ window.CLOUD = {
                 });
 
                 onUpdateCallback(list);
-            }, (error) => {
+            };
+
+            ref.on('value', handleValue, (error) => {
                 console.error("Cloud subscription sync error:", error);
                 if (onErrorCallback) onErrorCallback(error);
             });
+
+            return () => ref.off('value', handleValue);
         } catch (err) {
             console.error("Cloud setup sync error:", err);
             if (onErrorCallback) onErrorCallback(err);
@@ -126,8 +119,8 @@ window.CLOUD = {
         if (!db) throw new Error("Database service is offline.");
 
         try {
-            const docRef = db.collection('artifacts').doc(window.CONFIG.APP_ID).collection('public').doc('data').collection('complaints').doc(docId);
-            await docRef.delete();
+            const ref = db.ref('artifacts/' + window.CONFIG.APP_ID + '/public/data/complaints/' + docId);
+            await ref.remove();
             return { success: true };
         } catch (err) {
             console.error("Cloud database document deletion failure:", err);
@@ -139,10 +132,11 @@ window.CLOUD = {
         const localPass = localStorage.getItem('satyasetu_admin_pass');
         if (!db) return localPass || null;
         try {
-            const docRef = db.collection('artifacts').doc(window.CONFIG.APP_ID).collection('public').doc('config');
-            const doc = await docRef.get();
-            if (doc.exists) {
-                const cloudPass = doc.data().admin_password || null;
+            const ref = db.ref('artifacts/' + window.CONFIG.APP_ID + '/public/config');
+            const snap = await ref.once('value');
+            if (snap.exists()) {
+                const data = snap.val();
+                const cloudPass = data.admin_password || null;
                 if (cloudPass) {
                     localStorage.setItem('satyasetu_admin_pass', cloudPass);
                     return cloudPass;
@@ -158,12 +152,11 @@ window.CLOUD = {
         localStorage.setItem('satyasetu_admin_pass', newPassword);
         if (!db) return true;
         try {
-            const docRef = db.collection('artifacts').doc(window.CONFIG.APP_ID).collection('public').doc('config');
-            await docRef.set({ admin_password: newPassword }, { merge: true });
+            const ref = db.ref('artifacts/' + window.CONFIG.APP_ID + '/public/config');
+            await ref.update({ admin_password: newPassword });
             return true;
         } catch (err) {
             console.error("Cloud password update error:", err);
-            // Return true because the password was successfully cached in localStorage
             return true;
         }
     },

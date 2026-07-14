@@ -1,4 +1,4 @@
-﻿// Satyasetu - App Configurations (Global Namespace)
+// Satyasetu - App Configurations (Global Namespace)
 
 window.CONFIG = {
     APP_ID: "satyasetu-prod",
@@ -13,6 +13,7 @@ window.CONFIG = {
     CLOUD_CONFIG: {
         apiKey: "AIzaSyBGVlsu_dm8Pdr2GiBroBUIWLB3NTggR0Q",
         authDomain: "satyasetu-9be45.firebaseapp.com",
+        databaseURL: "https://satyasetu-9be45-default-rtdb.asia-southeast1.firebasedatabase.app",
         projectId: "satyasetu-9be45",
         storageBucket: "satyasetu-9be45.firebasestorage.app",
         messagingSenderId: "362533453912",
