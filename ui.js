@@ -1225,15 +1225,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (hasSession) {
                     openAdminPanel();
                 } else {
-                    const cloudPass = window.CLOUD.getAdminPassword ? await window.CLOUD.getAdminPassword() : null;
+                    const cloudPass = window.FIREBASE.getAdminPassword ? await window.FIREBASE.getAdminPassword() : null;
                     
                     if (cloudPass === null) {
                         // First-time setup with custom modal
                         showAdminAuthModal(true, async (trimmed) => {
                             try {
                                 window.UI.showToast("Initializing Console", "Configuring secure database sync...", "info");
-                                if (window.CLOUD.setAdminPassword) {
-                                    await window.CLOUD.setAdminPassword(trimmed);
+                                if (window.FIREBASE.setAdminPassword) {
+                                    await window.FIREBASE.setAdminPassword(trimmed);
                                     sessionStorage.setItem('satyasetu_admin_session', 'true');
                                     document.getElementById('admin-auth-modal').classList.remove('active');
                                     window.UI.showToast("Passphrase Saved", "System unlocked. Administrative access configured.", "success");
@@ -1430,8 +1430,8 @@ document.addEventListener('DOMContentLoaded', () => {
             showAdminAuthModal(true, async (trimmed) => {
                 try {
                     window.UI.showToast("Updating Pass", "Saving credentials...", "info");
-                    if (window.CLOUD.setAdminPassword) {
-                        await window.CLOUD.setAdminPassword(trimmed);
+                    if (window.FIREBASE.setAdminPassword) {
+                        await window.FIREBASE.setAdminPassword(trimmed);
                         document.getElementById('admin-auth-modal').classList.remove('active');
                         window.UI.showToast("Credentials Updated", "Password updated successfully.", "success");
                         logAdminAction("Administrative password changed.");
@@ -1961,7 +1961,7 @@ window.UI.adminChangeStatus = async function(id, newStatus) {
     try {
         item.status = newStatus;
         if (window.App.isCloudActive && item._firestore_id) {
-            await window.CLOUD.submitComplaint(item);
+            await window.FIREBASE.submitComplaint(item);
             window.UI.showToast("Cloud Synced", `Successfully updated status to ${newStatus}`, "success");
         } else {
             const idx = window.App.complaints.findIndex(c => c.id === id);
@@ -1985,7 +1985,7 @@ window.UI.adminDelete = async function(id, firestoreId, isLocal) {
     
     try {
         if (window.App.isCloudActive && !isLocal) {
-            await window.CLOUD.deleteComplaint(firestoreId);
+            await window.FIREBASE.deleteComplaint(firestoreId);
             window.UI.showToast("Removed Cloud Record", "Successfully removed from database.", "success");
         } else {
             window.App.complaints = window.App.complaints.filter(c => c.id !== id);

@@ -123,7 +123,7 @@ async function initApp() {
         connectionBadge.className = "badge badge-warning";
     }
 
-    const cloudResult = await window.CLOUD.init((user) => {
+    const firebaseResult = await window.FIREBASE.init((user) => {
         if (user) {
             window.App.isCloudActive = true;
             if (userBadge) {
@@ -141,7 +141,12 @@ async function initApp() {
         }
     });
 
-    if (!cloudResult.success) {
+    if (firebaseResult.success && window.FIREBASE.isReady() && !window.App.isCloudActive) {
+        window.App.isCloudActive = true;
+        setupRealtimeSync();
+    }
+
+    if (!firebaseResult.success) {
         handleCloudDisconnected();
     }
 
@@ -191,12 +196,17 @@ function setupRealtimeSync() {
         window.UI.showSkeletons('submissions-list');
     }
 
-    syncUnsubscribe = window.CLOUD.subscribeToComplaints(
+    syncUnsubscribe = window.FIREBASE.subscribeToComplaints(
         (cloudComplaints) => {
             if (cloudComplaints && cloudComplaints.length > 0) {
                 window.App.complaints = cloudComplaints;
             } else {
-                window.App.complaints = [...window.CONFIG.MOCK_COMPLAINTS];
+                const localCached = localStorage.getItem(window.CONFIG.LOCAL_STORAGE_KEY);
+                if (localCached) {
+                    window.App.complaints = JSON.parse(localCached);
+                } else {
+                    window.App.complaints = [...window.CONFIG.MOCK_COMPLAINTS];
+                }
             }
             localStorage.setItem(window.CONFIG.LOCAL_STORAGE_KEY, JSON.stringify(window.App.complaints));
             renderActivePage();
@@ -504,7 +514,7 @@ async function handleSubmitComplaint() {
         let savedToCloud = false;
         if (window.App.isCloudActive) {
             try {
-                await window.CLOUD.submitComplaint(record);
+                await window.FIREBASE.submitComplaint(record);
                 savedToCloud = true;
                 window.UI.showToast("Record Transmitted", `Case logged successfully. ID: ${uniqueId}`, "success");
             } catch (err) {
@@ -512,9 +522,10 @@ async function handleSubmitComplaint() {
             }
         }
 
+        window.App.complaints.unshift(record);
+        localStorage.setItem(window.CONFIG.LOCAL_STORAGE_KEY, JSON.stringify(window.App.complaints));
+
         if (!savedToCloud) {
-            window.App.complaints.unshift(record);
-            localStorage.setItem(window.CONFIG.LOCAL_STORAGE_KEY, JSON.stringify(window.App.complaints));
             window.UI.showToast("Saved Locally", `Case saved on device local sandbox. ID: ${uniqueId}`, "info");
         }
 
@@ -858,7 +869,7 @@ function renderComplaintDetails() {
                 if (confirm("Are you sure you want to remove this complaint?")) {
                     try {
                         if (window.App.isCloudActive && item._firestore_id) {
-                            await window.CLOUD.deleteComplaint(firestoreId);
+                             await window.FIREBASE.deleteComplaint(firestoreId);
                             window.UI.showToast("Record Removed", "Successfully deleted complaint record.", "success");
                         } else {
                             window.App.complaints = window.App.complaints.filter(c => c.id !== item.id);

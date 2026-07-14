@@ -13,7 +13,12 @@ window.CLOUD = {
                 throw new Error("Cloud SDK libraries not loaded.");
             }
 
-            const app = firebase.initializeApp(window.CONFIG.CLOUD_CONFIG);
+            let app;
+            if (firebase.apps && firebase.apps.length > 0) {
+                app = firebase.apps[0];
+            } else {
+                app = firebase.initializeApp(window.CONFIG.CLOUD_CONFIG);
+            }
             db = firebase.database(app);
 
             auth = firebase.auth(app);
@@ -43,7 +48,7 @@ window.CLOUD = {
         try {
             const ref = db.ref('artifacts/' + window.CONFIG.APP_ID + '/public/data/complaints');
             const docId = payload.id || ref.push().key;
-            await ref.child(docId).update({
+            await ref.child(docId).set({
                 ...payload,
                 id: docId,
                 updated_at: new Date().toISOString()

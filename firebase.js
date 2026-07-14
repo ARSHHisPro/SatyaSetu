@@ -1,4 +1,4 @@
-// Satyasetu - Firebase Integration with Offline Persistence Cache (Global compat script version)
+// Satyasetu - Firebase Firestore Integration (Global compat script version)
 
 let db = null;
 let auth = null;
@@ -13,7 +13,12 @@ window.FIREBASE = {
                 throw new Error("Firebase SDK libraries not loaded.");
             }
 
-            const app = firebase.initializeApp(window.CONFIG.FIREBASE_CONFIG);
+            let app;
+            if (firebase.apps && firebase.apps.length > 0) {
+                app = firebase.apps[0];
+            } else {
+                app = firebase.initializeApp(window.CONFIG.CLOUD_CONFIG);
+            }
             db = firebase.firestore(app);
 
             try {
@@ -132,6 +137,38 @@ window.FIREBASE = {
         } catch (err) {
             console.error("Firestore Delete Error:", err);
             throw err;
+        }
+    },
+
+    async getAdminPassword() {
+        if (!db) return null;
+        try {
+            const docRef = db.collection('artifacts').doc(window.CONFIG.APP_ID).collection('public').doc('config');
+            const snap = await docRef.get();
+            if (snap.exists()) {
+                const data = snap.data();
+                const cloudPass = data.admin_password || null;
+                if (cloudPass) {
+                    localStorage.setItem('satyasetu_admin_pass', cloudPass);
+                    return cloudPass;
+                }
+            }
+        } catch (err) {
+            console.warn("Could not read admin credentials from cloud:", err);
+        }
+        return null;
+    },
+
+    async setAdminPassword(newPassword) {
+        localStorage.setItem('satyasetu_admin_pass', newPassword);
+        if (!db) return true;
+        try {
+            const docRef = db.collection('artifacts').doc(window.CONFIG.APP_ID).collection('public').doc('config');
+            await docRef.set({ admin_password: newPassword }, { merge: true });
+            return true;
+        } catch (err) {
+            console.error("Cloud password update error:", err);
+            return true;
         }
     },
 
