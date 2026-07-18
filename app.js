@@ -1,4 +1,4 @@
-// Satyasetu - Main Application Coordinator (app.js - Global Namespace)
+﻿// Satyasetu - Main Application Coordinator (app.js - Global Namespace)
 
 window.App = {
     complaints: [],
@@ -90,9 +90,11 @@ const TRANSLATIONS = {
 };
 
 window.onload = function() {
-    setTimeout(hideLoader, 3000); // Max 3s fallback
     initApp().then(hideLoader).catch(hideLoader);
 };
+
+// Fallback: hide loader after 2 seconds regardless
+setTimeout(hideLoader, 2000);
 
 function hideLoader() {
     const loader = document.getElementById('loading-screen');
@@ -103,6 +105,12 @@ function hideLoader() {
 }
 
 async function initApp() {
+    const pageId = document.body.id;
+    if (pageId === 'page-admin') {
+        hideLoader();
+        return;
+    }
+
     // 1. Theme Configuration load
     initTheme();
 
@@ -125,16 +133,17 @@ async function initApp() {
     setupLanguageSelector();
     setupPWAInstall();
 
-    // 5. Initialize Cloud storage SDK
+    // 5. Initialize Cloud storage SDK in background (don't block UI)
     const connectionBadge = document.getElementById('connection-badge');
     const userBadge = document.getElementById('user-info-badge');
 
     if (connectionBadge) {
-        connectionBadge.textContent = "Connecting to shared database...";
-        connectionBadge.className = "badge badge-warning";
+        connectionBadge.textContent = "Storage: Local Device Backup (Offline Sandbox) 💾";
+        connectionBadge.className = "badge badge-info";
     }
 
-    const firebaseResult = await window.FIREBASE.init((user) => {
+    // Start Firebase init in background without blocking
+    const firebasePromise = window.FIREBASE.init((user) => {
         if (user) {
             window.App.isCloudActive = true;
             if (userBadge) {
@@ -152,14 +161,21 @@ async function initApp() {
         }
     });
 
-    if (firebaseResult.success && window.FIREBASE.isReady() && !window.App.isCloudActive) {
-        window.App.isCloudActive = true;
-        setupRealtimeSync();
-    }
+    const firebaseTimeout = new Promise((resolve) => {
+        setTimeout(() => resolve({ success: false, error: new Error('Firebase init timeout') }), 10000);
+    });
 
-    if (!firebaseResult.success) {
+    firebasePromise.then((firebaseResult) => {
+        if (firebaseResult.success && window.FIREBASE.isReady() && !window.App.isCloudActive) {
+            window.App.isCloudActive = true;
+            setupRealtimeSync();
+        }
+        if (!firebaseResult.success) {
+            handleCloudDisconnected();
+        }
+    }).catch(() => {
         handleCloudDisconnected();
-    }
+    });
 
     window.addEventListener('online', () => {
         if (connectionBadge && window.App.isCloudActive) {
@@ -357,7 +373,7 @@ function renderActivePage() {
 // PAGE SPECIFIC LOGICS
 // -------------------------------------------------------------
 
-// Page: index.html
+// Page: home.html
 function renderLandingStats() {
     const stats = window.CHARTS.computeStatistics(window.App.complaints);
     const totalEl = document.getElementById('landing-stat-total');
@@ -402,7 +418,7 @@ function setupFormListeners() {
             e.preventDefault();
             if (confirm("Are you sure you want to discard this complaint?")) {
                 clearDraft();
-                window.location.href = 'index.html';
+                window.location.href = 'home.html';
             }
         };
     }
@@ -1385,3 +1401,4 @@ function registerServiceWorker() {
         });
     }
 }
+

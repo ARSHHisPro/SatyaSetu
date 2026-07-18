@@ -1,9 +1,9 @@
-// SatyaSetu - Service Worker (sw.js) for Offline capabilities (Multipage version)
+﻿// SatyaSetu - Service Worker (sw.js) for Offline capabilities (Multipage version)
 
 const CACHE_NAME = 'satyasetu-v4-cache';
 const ASSETS = [
     '/',
-    '/index.html',
+    '/home.html',
     '/register.html',
     '/dashboard.html',
     '/privacy.html',
@@ -79,9 +79,10 @@ self.addEventListener('fetch', (e) => {
             }).catch(() => {
                 if (e.request.headers.get('accept').includes('text/html')) {
                     // Fallback to offline index page
-                    return caches.match('/index.html');
+                    return caches.match('/home.html');
                 }
             });
         })
     );
 });
+

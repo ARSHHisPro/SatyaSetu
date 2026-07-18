@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -380,7 +380,7 @@
                 <i data-lucide="settings" style="width:16px; height:16px;"></i> Settings
             </button>
             <div style="margin-top:auto; display:flex; flex-direction:column; gap:8px;">
-                <a href="index.html" class="admin-nav-item">
+                <a href="home.html" class="admin-nav-item">
                     <i data-lucide="home" style="width:16px; height:16px;"></i> Back to Site
                 </a>
                 <button class="admin-nav-item" id="admin-logout-btn">
@@ -559,18 +559,19 @@
     <script src="app.js"></script>
 
     <script>
-        window.addEventListener('load', () => {
+        window.addEventListener('load', async () => {
             if (window.lucide) {
                 lucide.createIcons();
             }
         });
 
-        document.addEventListener('DOMContentLoaded', async () => {
+        async function initAdminPage() {
             const checkSession = () => sessionStorage.getItem('satyasetu_admin_session') === 'true';
+            
             if (!checkSession()) {
                 await showAdminAuth();
                 if (!checkSession()) {
-                    window.location.href = 'index.html';
+                    window.location.href = 'home.html';
                     return;
                 }
             }
@@ -581,7 +582,13 @@
             updateLockdownBtnUI();
             loadAdminActionLogs();
             renderAdminChart(window.App.complaints || []);
-        });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initAdminPage);
+        } else {
+            initAdminPage();
+        }
 
         async function showAdminAuth() {
             const modal = document.getElementById('admin-auth-modal');
@@ -591,12 +598,27 @@
             const submitBtn = document.getElementById('auth-submit-btn');
             const cancelBtn = document.getElementById('auth-cancel-btn');
 
+            if (window.FIREBASE && !window.FIREBASE.isReady()) {
+                try {
+                    await window.FIREBASE.init();
+                } catch (e) {
+                    console.warn('Firebase init failed, proceeding in offline mode:', e);
+                }
+            }
+
             modal.style.display = 'flex';
             passField.value = '';
             passField.type = 'password';
             submitBtn.textContent = 'Verify Uplink';
 
-            const cloudPass = window.FIREBASE.getAdminPassword ? await window.FIREBASE.getAdminPassword() : null;
+            let cloudPass = null;
+            if (window.FIREBASE && window.FIREBASE.getAdminPassword) {
+                try {
+                    cloudPass = await window.FIREBASE.getAdminPassword();
+                } catch (e) {
+                    console.warn('Could not load admin password from cloud:', e);
+                }
+            }
             if (cloudPass === null) {
                 title.textContent = '🔑 Create Administrative Pass';
                 desc.textContent = 'Welcome! No password is set. Configure a secure console passcode (minimum 6 characters):';
@@ -710,7 +732,7 @@
             document.getElementById('admin-logout-btn').onclick = () => {
                 sessionStorage.removeItem('satyasetu_admin_session');
                 window.UI.showToast('Logged Out', 'Admin session terminated.', 'info');
-                window.location.href = 'index.html';
+                window.location.href = 'home.html';
             };
 
             document.getElementById('admin-settings-maintenance').onclick = () => {
@@ -984,3 +1006,4 @@
     </script>
 </body>
 </html>
+
