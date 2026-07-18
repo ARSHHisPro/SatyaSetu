@@ -1102,7 +1102,7 @@ document.addEventListener('DOMContentLoaded', () => {
         footer.innerHTML = `
             <div class="max-width-container footer-grid">
                 <div class="footer-col brand-col">
-                    <a href="home.html" class="brand" style="text-decoration:none;">
+                    <a href="index.html" class="brand" style="text-decoration:none;">
                         <span>SatyaSetu</span>
                         <span class="sdg-badge">SDG 16</span>
                     </a>
@@ -1111,7 +1111,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="footer-col links-col">
                     <h4>// NAVIGATION ARCH</h4>
                     <ul>
-                        <li><a href="home.html">Home</a></li>
+                        <li><a href="index.html">Home</a></li>
                         <li><a href="report.html">Register Complaint</a></li>
                         <li><a href="dashboard.html">Reports Hub</a></li>
                         <li><a href="quiz.html">Integrity Quiz</a></li>
@@ -2073,4 +2073,5 @@ window.UI.adminDelete = async function(id, firestoreId, isLocal) {
         window.UI.showToast("Admin Delete Error", e.message || "Failed to delete record.", "error");
     }
 };
+
 

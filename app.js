@@ -373,7 +373,7 @@ function renderActivePage() {
 // PAGE SPECIFIC LOGICS
 // -------------------------------------------------------------
 
-// Page: home.html
+// Page: index.html
 function renderLandingStats() {
     const stats = window.CHARTS.computeStatistics(window.App.complaints);
     const totalEl = document.getElementById('landing-stat-total');
@@ -418,7 +418,7 @@ function setupFormListeners() {
             e.preventDefault();
             if (confirm("Are you sure you want to discard this complaint?")) {
                 clearDraft();
-                window.location.href = 'home.html';
+                window.location.href = 'index.html';
             }
         };
     }
@@ -1401,4 +1401,5 @@ function registerServiceWorker() {
         });
     }
 }
+
 

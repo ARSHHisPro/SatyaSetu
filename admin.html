@@ -380,7 +380,7 @@
                 <i data-lucide="settings" style="width:16px; height:16px;"></i> Settings
             </button>
             <div style="margin-top:auto; display:flex; flex-direction:column; gap:8px;">
-                <a href="home.html" class="admin-nav-item">
+                <a href="index.html" class="admin-nav-item">
                     <i data-lucide="home" style="width:16px; height:16px;"></i> Back to Site
                 </a>
                 <button class="admin-nav-item" id="admin-logout-btn">
@@ -571,7 +571,7 @@
             if (!checkSession()) {
                 await showAdminAuth();
                 if (!checkSession()) {
-                    window.location.href = 'home.html';
+                    window.location.href = 'index.html';
                     return;
                 }
             }
@@ -732,7 +732,7 @@
             document.getElementById('admin-logout-btn').onclick = () => {
                 sessionStorage.removeItem('satyasetu_admin_session');
                 window.UI.showToast('Logged Out', 'Admin session terminated.', 'info');
-                window.location.href = 'home.html';
+                window.location.href = 'index.html';
             };
 
             document.getElementById('admin-settings-maintenance').onclick = () => {
@@ -1006,4 +1006,5 @@
     </script>
 </body>
 </html>
+
 

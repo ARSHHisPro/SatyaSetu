@@ -3,7 +3,7 @@
 const CACHE_NAME = 'satyasetu-v4-cache';
 const ASSETS = [
     '/',
-    '/home.html',
+    '/index.html',
     '/register.html',
     '/dashboard.html',
     '/privacy.html',
@@ -79,10 +79,11 @@ self.addEventListener('fetch', (e) => {
             }).catch(() => {
                 if (e.request.headers.get('accept').includes('text/html')) {
                     // Fallback to offline index page
-                    return caches.match('/home.html');
+                    return caches.match('/index.html');
                 }
             });
         })
     );
 });
+
 

@@ -2,7 +2,7 @@
   "name": "SatyaSetu SDG 16 Civic Integrity Hub",
   "short_name": "SatyaSetu",
   "description": "Secure, transparent community reporting and educational portal for SDG Goal 16.",
-  "start_url": "home.html",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#04060d",
   "theme_color": "#6366f1",
@@ -19,4 +19,5 @@
     }
   ]
 }
+
 
