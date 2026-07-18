@@ -74,7 +74,18 @@ const TRANSLATIONS = {
         search_placeholder: "शीर्षकों, आईडी या स्थानों में खोजें...",
         total_logs: "कुल लॉग",
         severe_flags: "उच्च और गंभीर झंडे",
-        sync_list: "सूची सिंक करें ⟳"
+        sync_list: "सूची सिंक करें ⟳",
+        no_cases_title: "कोई मामला दर्ज नहीं किया गया",
+        no_cases_desc: "अपना पहला मामला दर्ज करके सामुदायिक अखंडता का ट्रैकिंग शुरू करें।",
+        no_results_title: "कोई परिणाम मिल नहीं रहा",
+        no_results_desc: "फ़िल्टर या खोज शर्तों को बदलकर फिर से प्रयास करें।",
+        sdg16_title: "SDG 16 गहन अध्ययन",
+        sdg16_desc: "शांति, न्याय और मजबूत संस्थाएं",
+        back_to_about: "के बारे में पर वापस",
+        test_knowledge: "अपना ज्ञान परीक्षण करें",
+        offline_syncing: "ऑफ़लाइन आइटम सिंक हो रहे हैं...",
+        session_expired: "सत्र समाप्त",
+        admin_timeout: "सुरक्षा के लिए व्यवस्थापक सत्र समाप्त हो गया।"
     }
 };
 
@@ -149,6 +160,22 @@ async function initApp() {
     if (!firebaseResult.success) {
         handleCloudDisconnected();
     }
+
+    window.addEventListener('online', () => {
+        if (connectionBadge && window.App.isCloudActive) {
+            connectionBadge.textContent = "Storage: Connected to Shared Database 📡";
+            connectionBadge.className = "badge badge-success";
+        }
+        window.UI.showToast("Back Online", "Network connection restored. Syncing data...", "success");
+        if (window.UTILS.OfflineQueue.length > 0) {
+            processOfflineQueue();
+        }
+    });
+
+    window.addEventListener('offline', () => {
+        handleCloudDisconnected();
+        window.UI.showToast("Offline Mode", "No network connection. Data will be saved locally.", "warning");
+    });
 
     // 6. Run Page specific initialization routines contextually
     initPageSpecificCode();
@@ -231,6 +258,34 @@ function handleCloudDisconnected() {
         connectionBadge.className = "badge badge-info";
     }
     renderActivePage();
+}
+
+async function processOfflineQueue() {
+    const queue = window.UTILS.OfflineQueue.peek();
+    if (!queue.length) return;
+    
+    window.UI.showToast("Syncing Queue", `Processing ${queue.length} queued items...`, "info");
+    
+    while (window.UTILS.OfflineQueue.length > 0 && window.App.isCloudActive) {
+        const item = window.UTILS.OfflineQueue.dequeue();
+        if (!item) break;
+        
+        try {
+            if (item.type === 'complaint') {
+                await window.FIREBASE.submitComplaint(item.payload);
+            } else if (item.type === 'feedback') {
+                await window.FIREBASE.submitFeedback(item.payload);
+            }
+        } catch (e) {
+            console.warn("Queue sync failed for item:", item, e);
+            window.UTILS.OfflineQueue.enqueue(item);
+            break;
+        }
+    }
+    
+    if (window.UTILS.OfflineQueue.length === 0) {
+        window.UI.showToast("Sync Complete", "All queued items synced to cloud.", "success");
+    }
 }
 
 function setupNavigation() {
@@ -484,9 +539,17 @@ async function handleSubmitComplaint() {
         const sequenceCode = String(dailyCount + 1).padStart(2, '0');
         const uniqueId = `SS-${dateHash}-${sequenceCode}`;
 
-        // Compute local cryptographic integrity hash
         const hashContent = `${title}|${details}|${date}|${area},${city},${state}`;
         const cryptoHash = await window.UTILS.generateSHA256(hashContent);
+
+        let processedImages = selectedImagesList;
+        if (processedImages.length > 0 && window.VALIDATION.compressImage) {
+            try {
+                processedImages = await Promise.all(selectedImagesList.map(img => window.VALIDATION.compressImage(img, 1000, 1000, 0.7)));
+            } catch (e) {
+                console.warn("Image compression failed, using originals:", e);
+            }
+        }
 
         const record = {
             id: uniqueId,
@@ -502,8 +565,8 @@ async function handleSubmitComplaint() {
             priority: analysis.priority,
             urgency: analysis.urgency,
             tags: analysis.tags,
-            image_data: selectedImagesList.length > 0 ? selectedImagesList[0] : null,
-            image_list: selectedImagesList,
+            image_data: processedImages.length > 0 ? processedImages[0] : null,
+            image_list: processedImages,
             video_data: selectedVideoBase64,
             created_at: new Date().toISOString(),
             status: "Pending",
@@ -514,12 +577,18 @@ async function handleSubmitComplaint() {
         let savedToCloud = false;
         if (window.App.isCloudActive) {
             try {
-                await window.FIREBASE.submitComplaint(record);
+                const result = await window.FIREBASE.submitComplaint(record);
                 savedToCloud = true;
+                if (result.data) {
+                    record._firestore_id = result.data._firestore_id || result.id;
+                }
                 window.UI.showToast("Record Transmitted", `Case logged successfully. ID: ${uniqueId}`, "success");
             } catch (err) {
                 console.warn("Could not reach cloud database, caching offline:", err);
+                window.UTILS.OfflineQueue.enqueue({ type: 'complaint', payload: record });
             }
+        } else {
+            window.UTILS.OfflineQueue.enqueue({ type: 'complaint', payload: record });
         }
 
         window.App.complaints.unshift(record);
@@ -531,7 +600,6 @@ async function handleSubmitComplaint() {
 
         window.UTILS.setRateLimit('last_submit_timestamp');
 
-        // Clear Form fields
         resetForm();
         clearDraft();
 
@@ -669,8 +737,13 @@ function renderDashboardComplaints() {
         
         if (recent.length === 0) {
             listContainer.innerHTML = `
-                <div style="text-align:center; padding: 40px; grid-column: 1/-1;">
-                    <p style="color:var(--text-muted);">No complaints logged yet. Click "Register Complaint" to log your first case.</p>
+                <div style="text-align:center; padding: 60px 20px; grid-column: 1/-1;">
+                    <div style="width:80px; height:80px; margin:0 auto 20px auto; background:var(--primary-light); border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                        <i data-lucide="inbox" style="width:40px; height:40px; color:var(--primary);"></i>
+                    </div>
+                    <h3 style="font-size:20px; font-weight:900; margin-bottom:8px; color:var(--text-main);">No Cases Logged Yet</h3>
+                    <p style="color:var(--text-muted); margin-bottom:24px; max-width:400px; margin-left:auto; margin-right:auto;">Start tracking community integrity by filing your first complaint. Your reports help build transparent institutions.</p>
+                    <a href="report.html" class="btn btn-primary" style="padding:12px 28px; font-size:13px; text-decoration:none;">File Your First Concern</a>
                 </div>
             `;
             return;

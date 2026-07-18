@@ -7,6 +7,7 @@ const ASSETS = [
     '/register.html',
     '/dashboard.html',
     '/privacy.html',
+    '/admin.html',
     '/manifest.json',
     '/styles.css',
     '/config.js',
@@ -20,6 +21,8 @@ const ASSETS = [
     '/charts.js',
     '/validation.js',
     '/utils.js',
+    '/logo.png',
+    '/Bribe(curruption).png',
     'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap',
     'https://unpkg.com/lucide@latest',
     'https://cdn.jsdelivr.net/npm/chart.js'

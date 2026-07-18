@@ -59,12 +59,13 @@ window.FIREBASE = {
         try {
             const complaintsCollection = db.collection('artifacts').doc(window.CONFIG.APP_ID).collection('public').doc('data').collection('complaints');
             const docId = payload.id || complaintsCollection.doc().id;
-            await complaintsCollection.doc(docId).set({
+            const data = {
                 ...payload,
                 id: docId,
                 updated_at: new Date().toISOString()
-            }, { merge: true });
-            return { success: true, id: docId };
+            };
+            await complaintsCollection.doc(docId).set(data, { merge: true });
+            return { success: true, id: docId, data };
         } catch (err) {
             console.error("Firestore Write Error:", err);
             throw err;
@@ -77,12 +78,13 @@ window.FIREBASE = {
         try {
             const feedbacksCollection = db.collection('artifacts').doc(window.CONFIG.APP_ID).collection('public').doc('data').collection('feedbacks');
             const docId = feedbacksCollection.doc().id;
-            await feedbacksCollection.doc(docId).set({
+            const data = {
                 ...payload,
                 id: docId,
                 created_at: new Date().toISOString()
-            });
-            return { success: true, id: docId };
+            };
+            await feedbacksCollection.doc(docId).set(data);
+            return { success: true, id: docId, data };
         } catch (err) {
             console.error("Firestore Feedback Write Error:", err);
             throw err;

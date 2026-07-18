@@ -120,6 +120,8 @@ let selectedVideoBase64 = null;
 let toastContainer = null;
 let itemsPerPage = 6;
 let currentPage = 1;
+let lastDeletedItem = null;
+let undoTimer = null;
 
 window.UI = {
     init(onThemeToggleCallback, onFileSelectCallback) {
@@ -235,6 +237,64 @@ window.UI = {
             if (toast.parentNode) {
                 toast.classList.add('removing');
                 setTimeout(() => toast.remove(), 250);
+            }
+        }, 5000);
+    },
+
+    showUndoToast(title, message, onUndo) {
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-overlay';
+            document.body.appendChild(toastContainer);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = 'glass-card toast';
+        toast.innerHTML = `
+            <span class="toast-icon">🗑️</span>
+            <div class="toast-content">
+                <div class="toast-title">${window.UTILS.escapeHtml(title)}</div>
+                <div class="toast-msg">${window.UTILS.escapeHtml(message)}</div>
+            </div>
+            <button class="toast-undo">Undo</button>
+            <button class="toast-close">✕</button>
+        `;
+
+        toastContainer.appendChild(toast);
+
+        const undoBtn = toast.querySelector('.toast-undo');
+        const closeBtn = toast.querySelector('.toast-close');
+        
+        let undone = false;
+        const cleanup = () => {
+            if (!undone && undoBtn) {
+                undone = true;
+                if (onUndo) onUndo();
+            }
+            toast.classList.add('removing');
+            setTimeout(() => {
+                if (toast.parentNode) toast.remove();
+            }, 250);
+        };
+
+        undoBtn.onclick = (e) => {
+            e.preventDefault();
+            cleanup();
+        };
+
+        closeBtn.onclick = () => {
+            toast.classList.add('removing');
+            setTimeout(() => {
+                if (toast.parentNode) toast.remove();
+            }, 250);
+        };
+
+        setTimeout(() => {
+            if (toast.parentNode && !undone) {
+                toast.classList.add('removing');
+                setTimeout(() => {
+                    if (toast.parentNode) toast.remove();
+                }, 250);
             }
         }, 5000);
     },
@@ -494,12 +554,14 @@ window.UI = {
         if (filtered.length === 0) {
             listContainer.innerHTML = `
                 <div class="col-span-full" style="grid-column: 1 / -1; text-align:center; padding: 60px 20px;">
-                    <span style="font-size:48px; display:block; margin-bottom:12px;">🔍</span>
-                    <h3 style="font-weight:700; font-size:16px;">No reports match the selection</h3>
-                    <p style="color:var(--text-muted); font-size:13px; margin-top:4px;">Try modifying filters or search query.</p>
+                    <div style="width:80px; height:80px; margin:0 auto 16px auto; background:var(--primary-light); border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                        <i data-lucide="search-x" style="width:40px; height:40px; color:var(--primary);"></i>
+                    </div>
+                    <h3 style="font-weight:900; font-size:18px; margin-bottom:6px;">No Matching Reports</h3>
+                    <p style="color:var(--text-muted); font-size:13px; max-width:360px; margin:0 auto;">Try adjusting your filters or search terms to find what you are looking for.</p>
                 </div>
             `;
-            this.renderPagination(0);
+            if (window.lucide) window.lucide.createIcons();
             return;
         }
 
@@ -1080,9 +1142,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button class="footer-action-btn" id="footer-theme-toggle">
                         <i data-lucide="sun" style="width:14px; height:14px; margin-right:4px; display:inline-block; vertical-align:middle;"></i> Shift Environment
                     </button>
-                    <button class="footer-action-btn secure-uplink-btn" id="footer-admin-toggle">
-                        // OPEN UPLINK 🔒
-                    </button>
+                    <a href="admin.html" class="footer-action-btn secure-uplink-btn" style="text-decoration:none;">Open Admin Console</a>
                 </div>
                 <p class="system-status">SYSTEM SECURED // SDG CORE V1.12</p>
             </div>
@@ -1218,9 +1278,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Bind Admin Panel uplink callback
         const adminToggleBtn = document.getElementById('footer-admin-toggle');
-        if (adminToggleBtn) {
+        if (adminToggleBtn && adminToggleBtn.tagName === 'BUTTON') {
+            let adminSessionTimer = null;
+            
+            const resetAdminSessionTimer = () => {
+                if (adminSessionTimer) clearTimeout(adminSessionTimer);
+                adminSessionTimer = setTimeout(() => {
+                    sessionStorage.removeItem('satyasetu_admin_session');
+                    window.UI.showToast("Session Expired", "Admin session timed out for security.", "warning");
+                    if (document.getElementById('admin-overlay')) {
+                        document.getElementById('admin-overlay').classList.remove('active');
+                    }
+                }, 30 * 60 * 1000);
+            };
+            
             adminToggleBtn.onclick = async (e) => {
                 e.preventDefault();
+                resetAdminSessionTimer();
                 const hasSession = sessionStorage.getItem('satyasetu_admin_session') === 'true';
                 if (hasSession) {
                     openAdminPanel();
@@ -1228,7 +1302,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     const cloudPass = window.FIREBASE.getAdminPassword ? await window.FIREBASE.getAdminPassword() : null;
                     
                     if (cloudPass === null) {
-                        // First-time setup with custom modal
                         showAdminAuthModal(true, async (trimmed) => {
                             try {
                                 window.UI.showToast("Initializing Console", "Configuring secure database sync...", "info");
@@ -1238,6 +1311,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     document.getElementById('admin-auth-modal').classList.remove('active');
                                     window.UI.showToast("Passphrase Saved", "System unlocked. Administrative access configured.", "success");
                                     openAdminPanel();
+                                    resetAdminSessionTimer();
                                 } else {
                                     throw new Error("Cloud database offline.");
                                 }
@@ -1247,13 +1321,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         });
                     } else {
-                        // Standard verification with custom modal
                         showAdminAuthModal(false, (trimmed) => {
                             if (trimmed === cloudPass) {
                                 sessionStorage.setItem('satyasetu_admin_session', 'true');
                                 document.getElementById('admin-auth-modal').classList.remove('active');
                                 window.UI.showToast("Uplink Established", "Security access level: ADMINISTRATOR", "success");
                                 openAdminPanel();
+                                resetAdminSessionTimer();
                             } else {
                                 const authModal = document.getElementById('admin-auth-modal');
                                 const modalContent = authModal.querySelector('.auth-modal-content');

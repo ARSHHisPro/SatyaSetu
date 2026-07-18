@@ -9,6 +9,8 @@ window.CONFIG = {
     MAX_IMAGE_SIZE_MB: 4,
     MAX_VIDEO_SIZE_MB: 15,
     SUBMISSION_RATE_LIMIT_MS: 30000,
+    OFFLINE_QUEUE_KEY: "satyasetu_offline_queue",
+    ADMIN_SESSION_TIMEOUT_MS: 1800000,
 
     CLOUD_CONFIG: {
         apiKey: "AIzaSyBGVlsu_dm8Pdr2GiBroBUIWLB3NTggR0Q",

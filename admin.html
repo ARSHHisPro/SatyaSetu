@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Satya-Setu - Admin Console</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <link rel="stylesheet" href="styles.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .admin-page-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            min-height: 100vh;
+        }
+        .admin-sidebar {
+            background: rgba(0, 0, 0, 0.35);
+            border-right: 1px solid var(--glass-border);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .admin-sidebar .brand {
+            font-size: 20px;
+            font-weight: 900;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #a5b4fc 0%, var(--neon-indigo) 40%, var(--neon-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .admin-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            transition: all var(--transition-fast);
+        }
+        .admin-nav-item:hover, .admin-nav-item.active {
+            color: var(--text-main);
+            background: var(--primary-light);
+        }
+        .admin-main {
+            padding: 32px;
+            overflow-y: auto;
+        }
+        .admin-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .admin-header-bar h1 {
+            font-size: 26px;
+            font-weight: 900;
+        }
+        .admin-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .admin-stat-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            text-align: center;
+        }
+        .admin-stat-card h5 {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .admin-stat-card p {
+            font-size: 28px;
+            font-weight: 900;
+        }
+        .admin-panel {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .admin-panel h3 {
+            font-size: 16px;
+            font-weight: 900;
+            margin-bottom: 16px;
+        }
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .admin-table th, .admin-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--glass-border);
+            text-align: left;
+        }
+        .admin-table th {
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .admin-table tr:hover td {
+            background: rgba(255, 255, 255, 0.015);
+        }
+        .admin-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .admin-btn-sm {
+            padding: 6px 12px;
+            font-size: 11px;
+            font-weight: 800;
+            border-radius: var(--radius-sm);
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .admin-btn-sm.approve {
+            background: var(--accent-green-light);
+            color: var(--accent-green);
+        }
+        .admin-btn-sm.approve:hover {
+            background: var(--accent-green);
+            color: #000;
+        }
+        .admin-btn-sm.spam {
+            background: var(--accent-yellow-light);
+            color: var(--accent-yellow);
+        }
+        .admin-btn-sm.spam:hover {
+            background: var(--accent-yellow);
+            color: #000;
+        }
+        .admin-btn-sm.delete {
+            background: rgba(244, 63, 94, 0.15);
+            color: var(--neon-rose);
+        }
+        .admin-btn-sm.delete:hover {
+            background: var(--neon-rose);
+            color: #000;
+        }
+        .admin-btn-sm.view {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+        .admin-btn-sm.view:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .filter-bar input, .filter-bar select {
+            padding: 10px 14px;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: var(--radius-sm);
+            color: #fff;
+            font-size: 12px;
+            outline: none;
+        }
+        .audit-log {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--input-border);
+            padding: 12px;
+            font-family: monospace;
+            font-size: 10px;
+            color: #10b981;
+            overflow-y: auto;
+            max-height: 300px;
+            text-align: left;
+            line-height: 1.6;
+        }
+        .auth-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(4, 6, 13, 0.85);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5000;
+        }
+        .auth-modal-box {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+        .auth-modal-box h2 {
+            font-size: 20px;
+            font-weight: 900;
+            margin-bottom: 8px;
+        }
+        .auth-modal-box p {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+        .auth-input {
+            width: 100%;
+            padding: 12px 14px;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: var(--radius-sm);
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            margin-bottom: 16px;
+        }
+        .auth-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.25);
+        }
+        .detail-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(4, 6, 13, 0.85);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 5000;
+            padding: 20px;
+        }
+        .detail-modal-overlay.active {
+            display: flex;
+        }
+        .detail-modal-box {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            width: 100%;
+            max-width: 700px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+        .detail-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .detail-modal-header h3 {
+            font-size: 18px;
+            font-weight: 900;
+        }
+        .detail-close-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 18px;
+            cursor: pointer;
+        }
+        .detail-close-btn:hover {
+            color: var(--text-main);
+        }
+        .detail-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+            font-size: 12px;
+        }
+        .detail-section {
+            margin-bottom: 20px;
+        }
+        .detail-section h4 {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+        .detail-section p, .detail-section pre {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            white-space: pre-wrap;
+            background: rgba(0, 0, 0, 0.15);
+            padding: 14px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--glass-border);
+        }
+        .badge {
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            font-size: 10px;
+            font-weight: 900;
+        }
+        .badge-success {
+            background: var(--accent-green-light);
+            color: var(--accent-green);
+        }
+        .badge-danger {
+            background: var(--accent-red-light);
+            color: var(--accent-red);
+        }
+        .badge-warning {
+            background: var(--accent-yellow-light);
+            color: var(--accent-yellow);
+        }
+        .badge-info {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+        @media (max-width: 768px) {
+            .admin-page-layout {
+                grid-template-columns: 1fr;
+            }
+            .admin-sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body id="page-admin">
+    <div id="loading-screen" class="loading-overlay">
+        <div class="loading-content">
+            <img src="logo.png" alt="SatyaSetu Logo" class="loading-logo float-el">
+            <div class="loading-spinner"></div>
+            <span class="loading-text">Securing Connections...</span>
+        </div>
+    </div>
+
+    <div id="toast-container" class="toast-overlay"></div>
+
+    <div class="admin-page-layout">
+        <aside class="admin-sidebar">
+            <div class="brand">Satya-Setu</div>
+            <button class="admin-nav-item active" data-tab="dashboard">
+                <i data-lucide="layout-dashboard" style="width:16px; height:16px;"></i> Dashboard
+            </button>
+            <button class="admin-nav-item" data-tab="records">
+                <i data-lucide="database" style="width:16px; height:16px;"></i> Records
+            </button>
+            <button class="admin-nav-item" data-tab="logs">
+                <i data-lucide="scroll-text" style="width:16px; height:16px;"></i> Audit Logs
+            </button>
+            <button class="admin-nav-item" data-tab="settings">
+                <i data-lucide="settings" style="width:16px; height:16px;"></i> Settings
+            </button>
+            <div style="margin-top:auto; display:flex; flex-direction:column; gap:8px;">
+                <a href="index.html" class="admin-nav-item">
+                    <i data-lucide="home" style="width:16px; height:16px;"></i> Back to Site
+                </a>
+                <button class="admin-nav-item" id="admin-logout-btn">
+                    <i data-lucide="log-out" style="width:16px; height:16px;"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <main class="admin-main">
+            <div class="admin-header-bar">
+                <h1>Administrative Console</h1>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button class="btn btn-secondary" id="admin-export-json-btn" style="padding:10px 16px; font-size:12px;">Export JSON</button>
+                    <button class="btn btn-secondary" id="admin-export-csv-btn" style="padding:10px 16px; font-size:12px;">Export CSV</button>
+                    <button class="btn btn-secondary" id="admin-change-pass-btn" style="padding:10px 16px; font-size:12px;">Change Password</button>
+                    <button class="btn btn-secondary" id="admin-reset-db-btn" style="padding:10px 16px; font-size:12px;">Reset Database</button>
+                    <button class="btn btn-primary" id="admin-lockdown-toggle-btn" style="padding:10px 16px; font-size:12px;">Toggle Lockdown</button>
+                </div>
+            </div>
+
+            <div class="admin-stats-grid">
+                <div class="admin-stat-card">
+                    <h5>Total Records</h5>
+                    <p id="admin-stat-total">0</p>
+                </div>
+                <div class="admin-stat-card">
+                    <h5>Critical + High</h5>
+                    <p id="admin-stat-severe" style="color:var(--neon-rose);">0</p>
+                </div>
+                <div class="admin-stat-card">
+                    <h5>Flagged Spam</h5>
+                    <p id="admin-stat-spam" style="color:var(--neon-amber);">0</p>
+                </div>
+                <div class="admin-stat-card">
+                    <h5>AI Avg Trust</h5>
+                    <p id="admin-stat-confidence" style="color:var(--neon-emerald);">0%</p>
+                </div>
+                <div class="admin-stat-card">
+                    <h5>Pending</h5>
+                    <p id="admin-stat-pending" style="color:var(--neon-amber);">0</p>
+                </div>
+                <div class="admin-stat-card">
+                    <h5>Resolved</h5>
+                    <p id="admin-stat-resolved" style="color:var(--accent-green);">0</p>
+                </div>
+            </div>
+
+            <div id="tab-dashboard" class="admin-tab">
+                <div class="admin-panel">
+                    <h3>System Health</h3>
+                    <div id="admin-diagnostic-chart" style="height: 260px; position: relative;"></div>
+                </div>
+            </div>
+
+            <div id="tab-records" class="admin-tab" style="display:none;">
+                <div class="admin-panel">
+                    <div class="filter-bar">
+                        <input type="text" id="admin-search-input" placeholder="Search ID, title, city..." style="flex-grow:1; max-width:240px;">
+                        <select id="admin-filter-severity">
+                            <option value="">All Severities</option>
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                            <option value="Critical">Critical</option>
+                        </select>
+                        <select id="admin-filter-status">
+                            <option value="">All Statuses</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Under Review">Under Review</option>
+                            <option value="Resolved">Resolved</option>
+                            <option value="Flagged">Flagged</option>
+                        </select>
+                        <select id="admin-filter-classification">
+                            <option value="">All Categories</option>
+                            <option value="Bribery & Graft">Bribery & Graft</option>
+                            <option value="Judicial Abuse of Power">Judicial Abuse of Power</option>
+                            <option value="Embezzlement & Misappropriation">Embezzlement & Misappropriation</option>
+                            <option value="Administrative Negligence">Administrative Negligence</option>
+                            <option value="Human Rights Violations">Human Rights Violations</option>
+                            <option value="General Public Concern">General Public Concern</option>
+                        </select>
+                        <button class="btn btn-secondary" id="admin-clear-filters-btn" style="padding:10px 14px; font-size:11px; min-height:auto;">Reset</button>
+                        <button class="btn btn-primary" id="admin-add-mock-btn" style="padding:10px 14px; font-size:11px; min-height:auto; background:linear-gradient(135deg, var(--neon-emerald), var(--neon-cyan)); color:#000; border:none; font-weight:800;">+ Add Mock Case</button>
+                    </div>
+
+                    <div style="overflow-x:auto;">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Date</th>
+                                    <th>Title</th>
+                                    <th>Classification</th>
+                                    <th>Severity</th>
+                                    <th>AI Spam</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-logs" class="admin-tab" style="display:none;">
+                <div class="admin-panel">
+                    <h3>Console Operations Log</h3>
+                    <div id="admin-audit-log" class="audit-log"></div>
+                </div>
+            </div>
+
+            <div id="tab-settings" class="admin-tab" style="display:none;">
+                <div class="admin-panel">
+                    <h3>System Configuration</h3>
+                    <div style="display:flex; flex-direction:column; gap:16px; max-width:500px;">
+                        <div>
+                            <label style="font-size:12px; font-weight:800; display:block; margin-bottom:6px;">Admin Password</label>
+                            <input type="password" id="admin-settings-pass" class="auth-input" placeholder="Enter new password">
+                        </div>
+                        <div>
+                            <label style="font-size:12px; font-weight:800; display:block; margin-bottom:6px;">Maintenance Mode</label>
+                            <button class="btn btn-secondary" id="admin-settings-maintenance" style="padding:10px 16px; font-size:12px;">Toggle Maintenance Mode</button>
+                        </div>
+                        <div>
+                            <label style="font-size:12px; font-weight:800; display:block; margin-bottom:6px;">Data Management</label>
+                            <button class="btn btn-secondary" id="admin-settings-clear-local" style="padding:10px 16px; font-size:12px; margin-right:8px;">Clear Local Cache</button>
+                            <button class="btn btn-secondary" id="admin-settings-reset" style="padding:10px 16px; font-size:12px;">Reset to Mock Seeds</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="admin-auth-modal" class="auth-modal-overlay" style="display:none;">
+        <div class="auth-modal-box">
+            <h2 id="auth-modal-title">🛡️ Admin Security Access</h2>
+            <p id="auth-modal-desc">Enter your administrative passcode to access the console.</p>
+            <input type="password" id="auth-password-field" class="auth-input" placeholder="••••••" maxlength="32" autocomplete="off" />
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-secondary" id="auth-cancel-btn" style="flex:1;">Cancel</button>
+                <button class="btn btn-primary" id="auth-submit-btn" style="flex:1;">Verify Uplink</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-detail-modal" class="detail-modal-overlay">
+        <div class="detail-modal-box">
+            <div class="detail-modal-header">
+                <h3>Case File Analysis</h3>
+                <button class="detail-close-btn" id="detail-close-btn">✕</button>
+            </div>
+            <div id="detail-modal-body"></div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="max-width-container">
+            <p style="margin-bottom:4px;">SatyaSetu Civic Transparency Network — Made in alignment with SDG Goal 16.</p>
+        </div>
+    </footer>
+
+    <script src="libs/cloud-core.js"></script>
+    <script src="libs/cloud-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <script src="config.js"></script>
+    <script src="utils.js"></script>
+    <script src="validation.js"></script>
+    <script src="ai.js"></script>
+    <script src="firebase.js"></script>
+    <script src="charts.js"></script>
+    <script src="ui.js"></script>
+    <script src="app.js"></script>
+
+    <script>
+        window.addEventListener('load', () => {
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const checkSession = () => sessionStorage.getItem('satyasetu_admin_session') === 'true';
+            if (!checkSession()) {
+                await showAdminAuth();
+                if (!checkSession()) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+            }
+
+            initAdminTabs();
+            initAdminControls();
+            renderAdminTable();
+            updateLockdownBtnUI();
+            loadAdminActionLogs();
+            renderAdminChart(window.App.complaints || []);
+        });
+
+        async function showAdminAuth() {
+            const modal = document.getElementById('admin-auth-modal');
+            const title = document.getElementById('auth-modal-title');
+            const desc = document.getElementById('auth-modal-desc');
+            const passField = document.getElementById('auth-password-field');
+            const submitBtn = document.getElementById('auth-submit-btn');
+            const cancelBtn = document.getElementById('auth-cancel-btn');
+
+            modal.style.display = 'flex';
+            passField.value = '';
+            passField.type = 'password';
+            submitBtn.textContent = 'Verify Uplink';
+
+            const cloudPass = window.FIREBASE.getAdminPassword ? await window.FIREBASE.getAdminPassword() : null;
+            if (cloudPass === null) {
+                title.textContent = '🔑 Create Administrative Pass';
+                desc.textContent = 'Welcome! No password is set. Configure a secure console passcode (minimum 6 characters):';
+                submitBtn.textContent = 'Configure Console';
+            } else {
+                title.textContent = '🛡️ Admin Security Access';
+                desc.textContent = 'Enter your secure administrative passcode to establish uplink connection.';
+                submitBtn.textContent = 'Verify Uplink';
+            }
+
+            return new Promise((resolve) => {
+                const handleSubmit = () => {
+                    const val = passField.value.trim();
+                    if (cloudPass === null && val.length < 6) {
+                        passField.style.borderColor = 'var(--neon-rose)';
+                        setTimeout(() => passField.style.borderColor = '', 800);
+                        window.UI.showToast('Invalid Password', 'Passphrase must be at least 6 characters.', 'warning');
+                        return;
+                    }
+                    if (val === '') {
+                        passField.style.borderColor = 'var(--neon-rose)';
+                        setTimeout(() => passField.style.borderColor = '', 800);
+                        return;
+                    }
+
+                    if (cloudPass === null) {
+                        window.FIREBASE.setAdminPassword(val).then(() => {
+                            sessionStorage.setItem('satyasetu_admin_session', 'true');
+                            modal.style.display = 'none';
+                            window.UI.showToast('Passphrase Saved', 'System unlocked. Administrative access configured.', 'success');
+                            resolve(true);
+                        }).catch(() => {
+                            window.UI.showToast('Setup Failed', 'Could not write credentials.', 'error');
+                            resolve(false);
+                        });
+                    } else if (val === cloudPass) {
+                        sessionStorage.setItem('satyasetu_admin_session', 'true');
+                        modal.style.display = 'none';
+                        window.UI.showToast('Uplink Established', 'Security access level: ADMINISTRATOR', 'success');
+                        resolve(true);
+                    } else {
+                        passField.style.borderColor = 'var(--neon-rose)';
+                        setTimeout(() => passField.style.borderColor = '', 800);
+                        window.UI.showToast('Access Denied', 'Invalid administrative passphrase.', 'error');
+                    }
+                };
+
+                submitBtn.onclick = handleSubmit;
+                cancelBtn.onclick = () => {
+                    modal.style.display = 'none';
+                    resolve(false);
+                };
+                passField.onkeydown = (e) => {
+                    if (e.key === 'Enter') handleSubmit();
+                };
+                passField.focus();
+            });
+        }
+
+        function initAdminTabs() {
+            const navItems = document.querySelectorAll('.admin-nav-item[data-tab]');
+            const tabs = document.querySelectorAll('.admin-tab');
+
+            navItems.forEach(item => {
+                item.onclick = () => {
+                    const tabName = item.getAttribute('data-tab');
+                    navItems.forEach(n => n.classList.remove('active'));
+                    item.classList.add('active');
+                    tabs.forEach(t => t.style.display = 'none');
+                    const target = document.getElementById('tab-' + tabName);
+                    if (target) target.style.display = 'block';
+                };
+            });
+        }
+
+        function initAdminControls() {
+            document.getElementById('admin-export-json-btn').onclick = () => exportData('json');
+            document.getElementById('admin-export-csv-btn').onclick = () => exportData('csv');
+
+            document.getElementById('admin-change-pass-btn').onclick = async () => {
+                const newPass = prompt('Enter new admin password:');
+                if (!newPass || newPass.trim().length < 6) {
+                    window.UI.showToast('Invalid Password', 'Password must be at least 6 characters.', 'warning');
+                    return;
+                }
+                await window.FIREBASE.setAdminPassword(newPass.trim());
+                window.UI.showToast('Credentials Updated', 'Password updated successfully.', 'success');
+                logAdminAction('Administrative password changed.');
+            };
+
+            document.getElementById('admin-reset-db-btn').onclick = () => {
+                if (confirm('Reset database to mock seeds? This cannot be undone.')) {
+                    window.App.complaints = [...window.CONFIG.MOCK_COMPLAINTS];
+                    localStorage.setItem(window.CONFIG.LOCAL_STORAGE_KEY, JSON.stringify(window.App.complaints));
+                    window.UI.showToast('Database Reset', 'Reverted complaints to mock seeds.', 'success');
+                    logAdminAction('Reverted entire database back to default seeds.');
+                    renderAdminTable();
+                }
+            };
+
+            document.getElementById('admin-lockdown-toggle-btn').onclick = () => {
+                const isMaintenance = localStorage.getItem('satyasetu_maintenance_mode') === 'true';
+                const nextState = !isMaintenance;
+                localStorage.setItem('satyasetu_maintenance_mode', String(nextState));
+                logAdminAction(nextState ? 'ACTIVATED global system lockdown mode.' : 'DEACTIVATED global system lockdown.');
+                updateLockdownBtnUI();
+                if (nextState && window.SOUNDS) window.SOUNDS.playSiren();
+                window.UI.showToast('Lockdown Configured', nextState ? 'Console locked.' : 'System online.', 'info');
+            };
+
+            document.getElementById('admin-logout-btn').onclick = () => {
+                sessionStorage.removeItem('satyasetu_admin_session');
+                window.UI.showToast('Logged Out', 'Admin session terminated.', 'info');
+                window.location.href = 'index.html';
+            };
+
+            document.getElementById('admin-settings-maintenance').onclick = () => {
+                const isMaintenance = localStorage.getItem('satyasetu_maintenance_mode') === 'true';
+                localStorage.setItem('satyasetu_maintenance_mode', String(!isMaintenance));
+                window.UI.showToast('Maintenance Toggled', !isMaintenance ? 'Lockdown enabled.' : 'Lockdown disabled.', 'info');
+                logAdminAction(!isMaintenance ? 'ACTIVATED maintenance mode from settings.' : 'DEACTIVATED maintenance mode from settings.');
+                updateLockdownBtnUI();
+            };
+
+            document.getElementById('admin-settings-clear-local').onclick = () => {
+                if (confirm('Clear all local cached data?')) {
+                    localStorage.clear();
+                    window.UI.showToast('Local Cache Cleared', 'Device storage has been wiped.', 'success');
+                    logAdminAction('Cleared all local storage caches.');
+                }
+            };
+
+            document.getElementById('admin-settings-reset').onclick = () => {
+                if (confirm('Reset all data to default mock seeds?')) {
+                    localStorage.removeItem(window.CONFIG.LOCAL_STORAGE_KEY);
+                    window.App.complaints = [...window.CONFIG.MOCK_COMPLAINTS];
+                    localStorage.setItem(window.CONFIG.LOCAL_STORAGE_KEY, JSON.stringify(window.App.complaints));
+                    window.UI.showToast('Database Reset', 'Reverted to default seed data.', 'success');
+                    logAdminAction('Reset database to mock seeds from settings.');
+                    renderAdminTable();
+                }
+            };
+
+            const searchInput = document.getElementById('admin-search-input');
+            const filterSeverity = document.getElementById('admin-filter-severity');
+            const filterStatus = document.getElementById('admin-filter-status');
+            const filterClass = document.getElementById('admin-filter-classification');
+            const clearFiltersBtn = document.getElementById('admin-clear-filters-btn');
+
+            const applyFilters = () => {
+                renderAdminTable({
+                    search: searchInput.value,
+                    severity: filterSeverity.value,
+                    status: filterStatus.value,
+                    classification: filterClass.value
+                });
+            };
+
+            searchInput.oninput = applyFilters;
+            filterSeverity.onchange = applyFilters;
+            filterStatus.onchange = applyFilters;
+            filterClass.onchange = applyFilters;
+
+            clearFiltersBtn.onclick = () => {
+                searchInput.value = '';
+                filterSeverity.value = '';
+                filterStatus.value = '';
+                filterClass.value = '';
+                renderAdminTable();
+                logAdminAction('Cleared table filters.');
+            };
+        }
+
+        function renderAdminTable(filters) {
+            let list = window.App.complaints || [];
+            filters = filters || {};
+
+            if (filters.search) {
+                const q = filters.search.toLowerCase();
+                list = list.filter(c =>
+                    (c.id || '').toLowerCase().includes(q) ||
+                    (c.title || '').toLowerCase().includes(q) ||
+                    (c.details || '').toLowerCase().includes(q) ||
+                    (c.city || '').toLowerCase().includes(q) ||
+                    (c.state || '').toLowerCase().includes(q)
+                );
+            }
+            if (filters.severity) {
+                list = list.filter(c => c.severity === filters.severity);
+            }
+            if (filters.status) {
+                list = list.filter(c => c.status === filters.status);
+            }
+            if (filters.classification) {
+                list = list.filter(c => c.classification === filters.classification);
+            }
+
+            const stats = window.CHARTS ? window.CHARTS.computeStatistics(window.App.complaints || []) : { total: list.length, criticalCount: 0, highCount: 0, flagged: 0, avgConfidence: 0, statusCounts: {} };
+            document.getElementById('admin-stat-total').textContent = (window.App.complaints || []).length;
+            document.getElementById('admin-stat-severe').textContent = stats.criticalCount + stats.highCount;
+            document.getElementById('admin-stat-spam').textContent = stats.flagged;
+            document.getElementById('admin-stat-confidence').textContent = `${(stats.avgConfidence * 100).toFixed(0)}%`;
+            document.getElementById('admin-stat-pending').textContent = (stats.statusCounts && stats.statusCounts.Pending) || 0;
+            document.getElementById('admin-stat-resolved').textContent = (stats.statusCounts && stats.statusCounts.Resolved) || 0;
+
+            const tbody = document.getElementById('admin-table-body');
+            if (!tbody) return;
+
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--text-muted);">No matching case files found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = list.map(c => {
+                const spamPercent = c.ai_analysis ? Math.round(c.ai_analysis.spamScore * 100) : 0;
+                const firestoreId = c._firestore_id || c.id;
+                const isLocal = !window.App.isCloudActive || !c._firestore_id || String(c.id).startsWith('local_');
+                const statusActionLabel = c.status === 'Resolved' ? 'Reopen' : 'Resolve';
+                const spamActionLabel = c.status === 'Flagged' ? 'Approve' : 'Flag Spam';
+
+                return `
+                    <tr style="cursor:pointer;" onclick="window.UI.adminViewDetails('${c.id}')">
+                        <td style="font-family:monospace; font-size:11px; color:var(--neon-indigo); font-weight:700;">${c.id}</td>
+                        <td>${c.event_date}</td>
+                        <td style="font-weight:700; max-width:240px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${window.UTILS.escapeHtml(c.title)}">${window.UTILS.escapeHtml(c.title)}</td>
+                        <td>${c.classification}</td>
+                        <td><span class="badge ${c.severity === 'Critical' || c.severity === 'High' ? 'badge-danger' : c.severity === 'Medium' ? 'badge-warning' : 'badge-info'}">${c.severity}</span></td>
+                        <td>${spamPercent}%</td>
+                        <td><span class="badge ${c.status === 'Resolved' ? 'badge-success' : c.status === 'Flagged' ? 'badge-danger' : c.status === 'Under Review' ? 'badge-warning' : 'badge-info'}">${c.status}</span></td>
+                        <td class="admin-actions" onclick="event.stopPropagation()">
+                            <button class="admin-btn-sm view" onclick="window.UI.adminViewDetails('${c.id}')">View</button>
+                            <button class="admin-btn-sm approve" onclick="window.UI.adminChangeStatus('${c.id}', '${c.status === 'Resolved' ? 'Pending' : 'Resolved'}')">${statusActionLabel}</button>
+                            <button class="admin-btn-sm spam" onclick="window.UI.adminChangeStatus('${c.id}', '${c.status === 'Flagged' ? 'Pending' : 'Flagged'}')">${spamActionLabel}</button>
+                            <button class="admin-btn-sm delete" onclick="window.UI.adminDelete('${c.id}', '${firestoreId}', ${isLocal})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            renderAdminChart(list);
+        }
+
+        function updateLockdownBtnUI() {
+            const btn = document.getElementById('admin-lockdown-toggle-btn');
+            if (!btn) return;
+            const isMaintenance = localStorage.getItem('satyasetu_maintenance_mode') === 'true';
+            if (isMaintenance) {
+                btn.textContent = 'Lockdown Active';
+                btn.style.background = 'var(--neon-rose)';
+                btn.style.color = '#fff';
+            } else {
+                btn.textContent = 'Lockdown Inactive';
+                btn.style.background = 'rgba(255,255,255,0.06)';
+                btn.style.color = 'var(--text-muted)';
+            }
+        }
+
+        function logAdminAction(msg) {
+            const logPanel = document.getElementById('admin-audit-log');
+            if (!logPanel) return;
+            const time = new Date().toLocaleTimeString();
+            const line = document.createElement('div');
+            line.innerHTML = `<span style="color:#6366f1;">[${time}]</span> ${msg}`;
+            logPanel.appendChild(line);
+            logPanel.scrollTop = logPanel.scrollHeight;
+
+            let logs = JSON.parse(sessionStorage.getItem('satyasetu_admin_audit_logs') || '[]');
+            logs.push({ time, msg });
+            sessionStorage.setItem('satyasetu_admin_audit_logs', JSON.stringify(logs));
+        }
+
+        function loadAdminActionLogs() {
+            const logPanel = document.getElementById('admin-audit-log');
+            if (!logPanel) return;
+            logPanel.innerHTML = '';
+            let logs = JSON.parse(sessionStorage.getItem('satyasetu_admin_audit_logs') || '[]');
+            if (logs.length === 0) {
+                logs.push({ time: new Date().toLocaleTimeString(), msg: 'Administrative session established securely.' });
+                sessionStorage.setItem('satyasetu_admin_audit_logs', JSON.stringify(logs));
+            }
+            logs.forEach(l => {
+                const line = document.createElement('div');
+                line.innerHTML = `<span style="color:#6366f1;">[${l.time}]</span> ${l.msg}`;
+                logPanel.appendChild(line);
+            });
+            logPanel.scrollTop = logPanel.scrollHeight;
+        }
+
+        function renderAdminChart(filteredList) {
+            if (typeof Chart === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+                script.onload = () => renderAdminChart(filteredList);
+                document.head.appendChild(script);
+                return;
+            }
+
+            const canvas = document.getElementById('admin-diagnostic-chart');
+            if (!canvas) return;
+
+            const statusCounts = { Pending: 0, 'Under Review': 0, Resolved: 0, Flagged: 0 };
+            (filteredList || []).forEach(c => {
+                if (statusCounts[c.status] !== undefined) {
+                    statusCounts[c.status]++;
+                }
+            });
+
+            if (window.adminChartInstance) {
+                window.adminChartInstance.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            window.adminChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(statusCounts),
+                    datasets: [{
+                        data: Object.values(statusCounts),
+                        backgroundColor: ['#6366f1', '#fbbf24', '#34d399', '#f87171'],
+                        borderColor: 'rgba(255,255,255,0.05)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: '#94a3b8',
+                                font: { size: 9, weight: 'bold' },
+                                boxWidth: 8
+                            }
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+        }
+
+        function exportData(format) {
+            const data = window.App.complaints || [];
+            let mimeType = 'application/json';
+            let content = '';
+            let filename = `satyasetu_export_${Date.now()}.json`;
+
+            if (format === 'json') {
+                content = JSON.stringify(data, null, 2);
+            } else {
+                mimeType = 'text/csv';
+                filename = `satyasetu_export_${Date.now()}.csv`;
+                const headers = ['ID', 'Date', 'Title', 'Classification', 'Severity', 'Status', 'City', 'State', 'Created At'];
+                const rows = data.map(c => [
+                    c.id,
+                    c.event_date,
+                    `"${(c.title || '').replace(/"/g, '""')}"`,
+                    c.classification,
+                    c.severity,
+                    c.status,
+                    c.city,
+                    c.state,
+                    c.created_at
+                ]);
+                content = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+            }
+
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        document.getElementById('detail-close-btn').onclick = () => {
+            document.getElementById('admin-detail-modal').classList.remove('active');
+        };
+        document.getElementById('admin-detail-modal').onclick = (e) => {
+            if (e.target === document.getElementById('admin-detail-modal')) {
+                document.getElementById('admin-detail-modal').classList.remove('active');
+            }
+        };
+    </script>
+</body>
+</html>

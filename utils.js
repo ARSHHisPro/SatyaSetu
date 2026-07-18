@@ -313,13 +313,63 @@ window.UTILS = {
             return hashHex;
         } catch (e) {
             console.error("SHA256 generation failed:", e);
-            // Simple fallback hash
             let h = 0;
             for (let i = 0; i < text.length; i++) {
                 h = (h << 5) - h + text.charCodeAt(i);
                 h |= 0;
             }
             return "fallback-" + Math.abs(h).toString(16);
+        }
+    },
+
+    // Offline queue manager
+    OfflineQueue: {
+        key: window.CONFIG ? window.CONFIG.OFFLINE_QUEUE_KEY : 'satyasetu_offline_queue',
+
+        enqueue(action) {
+            try {
+                const queue = JSON.parse(localStorage.getItem(this.key) || '[]');
+                queue.push({ ...action, queuedAt: Date.now() });
+                localStorage.setItem(this.key, JSON.stringify(queue));
+            } catch (e) {
+                console.error("Offline queue enqueue failed:", e);
+            }
+        },
+
+        dequeue() {
+            try {
+                const queue = JSON.parse(localStorage.getItem(this.key) || '[]');
+                const next = queue.shift();
+                localStorage.setItem(this.key, JSON.stringify(queue));
+                return next;
+            } catch (e) {
+                console.error("Offline queue dequeue failed:", e);
+                return null;
+            }
+        },
+
+        peek() {
+            try {
+                return JSON.parse(localStorage.getItem(this.key) || '[]');
+            } catch (e) {
+                return [];
+            }
+        },
+
+        clear() {
+            try {
+                localStorage.removeItem(this.key);
+            } catch (e) {
+                console.error(e);
+            }
+        },
+
+        get length() {
+            try {
+                return JSON.parse(localStorage.getItem(this.key) || '[]').length;
+            } catch (e) {
+                return 0;
+            }
         }
     }
 };
